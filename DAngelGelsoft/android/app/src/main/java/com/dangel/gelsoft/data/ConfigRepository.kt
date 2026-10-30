@@ -18,15 +18,12 @@ import kotlinx.coroutines.withContext
  *     demo runs standalone before any Supabase project exists.
  *
  * To point the app at a real backend, replace ENDPOINT_URL with the deployed
- * Edge Function URL (see the root README, step 3 and 5).
+ * JSON URL (GitHub Pages, modelo Aguacero).
  */
 object ConfigRepository {
 
-    // TODO: replace with the real URL after deploying the Edge Function, e.g.
-    // "https://abcdefcompany.supabase.co/functions/v1/app-config"
-    // While the placeholder is in place, the network step is skipped on purpose
-    // so the demo opens instantly with the bundled data.
-    const val ENDPOINT_URL = "https://TU-PROYECTO.supabase.co/functions/v1/app-config"
+    // JSON generado por el workflow syncSupabase.yml (Supabase -> Pages).
+    const val ENDPOINT_URL = "https://dah3l.github.io/DAngelGelsoft/app-config.json"
 
     private const val CACHE_FILE = "app_config.json"
 
