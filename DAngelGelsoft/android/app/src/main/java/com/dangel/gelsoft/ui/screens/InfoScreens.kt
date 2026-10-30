@@ -33,6 +33,14 @@ fun SchedulesScreen(config: AppConfig) {
     ) {
         Text("Horarios", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(12.dp))
+        if (config.schedules.isEmpty()) {
+            Text(
+                "Pronto publicaremos los horarios. Escríbenos por WhatsApp para reservar.",
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         for (schedule in config.schedules) {
             Card(
                 modifier = Modifier
@@ -106,6 +114,14 @@ fun PricesScreen(config: AppConfig) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(12.dp))
+        if (config.prices.isEmpty()) {
+            Text(
+                "Pronto publicaremos las modalidades y precios. Escríbenos por WhatsApp para más información.",
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         for (price in config.prices) {
             Card(
                 modifier = Modifier
