@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel — D'Angel Gelsoft</title>
+<!-- Cliente oficial de Supabase (CDN). Sin esto el panel no conecta. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  /* Tema de la marca: fondo negro, acento turquesa, texto blanco. */
+  :root { --teal: #00d1c1; --bg: #000; --card: #141414; --line: #2a2a2a; --muted: #bbb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: #fff; font-family: system-ui, sans-serif; }
+  header { padding: 20px; border-bottom: 2px solid var(--teal); }
+  header h1 { margin: 0; font-size: 24px; }
+  header p { color: var(--muted); margin: 6px 0 0; }
+  main { max-width: 820px; margin: 0 auto; padding: 20px; }
+  .banner { background: #1c2b29; border: 1px solid var(--teal); border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; }
+  .banner b { color: var(--teal); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  h2 { margin: 0 0 12px; font-size: 18px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: #1e1e1e; color: #fff; font-size: 15px; }
+  textarea { min-height: 70px; }
+  button { background: var(--teal); color: #000; border: 0; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+  button.sec { background: transparent; color: #fff; border: 1px solid var(--line); }
+  button.danger { background: transparent; color: #ff7b7b; border: 1px solid #552222; padding: 6px 10px; font-size: 13px; margin: 0; }
+  .row { display: flex; gap: 12px; align-items: flex-end; }
+  .row > div { flex: 1; }
+  .item { border-top: 1px solid var(--line); padding: 12px 0; display: flex; justify-content: space-between; gap: 12px; }
+  .item small { color: var(--muted); }
+  #estado { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-weight: bold; padding: 10px 18px; border-radius: 999px; display: none; }
+  pre { background: #0d0d0d; border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
+  .nota { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Panel — D'Angel Gelsoft</h1>
+  <p>Edita el contenido de la app sin tocar código. Al guardar, la app lo muestra al instante.</p>
+</header>
+
+<main>
+  <div class="banner">
+    <b>Precios y modalidades de prueba:</b> los valores que ves abajo son
+    ejemplos para la demo. Cámbialos aquí con los reales del negocio y
+    listo: la app los muestra sola, sin actualizar la APK.
+  </div>
+
+  <!-- ============ INFORMACIÓN DEL NEGOCIO ============ -->
+  <section>
+    <h2>Información del negocio</h2>
+    <label>Nombre</label>
+    <input id="info-nombre">
+    <label>Eslogan</label>
+    <input id="info-eslogan">
+    <label>Descripción</label>
+    <textarea id="info-descripcion"></textarea>
+    <label>Ubicación</label>
+    <input id="info-ubicacion">
+    <label>Instagram (sin @)</label>
+    <input id="info-instagram">
+    <div class="row">
+      <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
+      <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
+    </div>
+    <button onclick="guardarInfo()">Guardar información</button>
+  </section>
+
+  <!-- ============ HORARIOS ============ -->
+  <section>
+    <h2>Horarios</h2>
+    <div id="lista-horarios"></div>
+    <label>Título</label><input id="hor-titulo" placeholder="Ej: Horario regular">
+    <div class="row">
+      <div><label>Días</label><input id="hor-dias" placeholder="Ej: Lunes a domingo"></div>
+      <div><label>Apertura</label><input id="hor-apertura" placeholder="10:00 AM"></div>
+      <div><label>Cierre</label><input id="hor-cierre" placeholder="10:00 PM"></div>
+    </div>
+    <label>Nota</label><input id="hor-nota" placeholder="Ej: Abierto todos los días.">
+    <button onclick="agregarHorario()">Agregar horario</button>
+  </section>
+
+  <!-- ============ PRECIOS ============ -->
+  <section>
+    <h2>Precios y modalidades</h2>
+    <div id="lista-precios"></div>
+    <label>Modalidad</label><input id="pre-nombre" placeholder="Ej: Sesión de día">
+    <label>Descripción</label><input id="pre-desc" placeholder="Ej: Partida diurna, incluye equipo.">
+    <div class="row">
+      <div><label>Precio (CUP)</label><input id="pre-precio" type="number" placeholder="500"></div>
+      <div><label>Unidad</label><input id="pre-unidad" value="por persona"></div>
+    </div>
+    <button onclick="agregarPrecio()">Agregar precio</button>
+  </section>
+
+  <!-- ============ AVISOS ============ -->
+  <section>
+    <h2>Avisos y noches especiales</h2>
+    <div id="lista-anuncios"></div>
+    <label>Título</label><input id="anu-titulo" placeholder="Ej: Noche especial de gelsoft">
+    <label>Texto</label><textarea id="anu-texto"></textarea>
+    <label>Etiqueta de fecha</label><input id="anu-fecha" placeholder="Ej: Viernes">
+    <button onclick="agregarAnuncio()">Agregar aviso</button>
+  </section>
+
+  <!-- ============ VER EL JSON ============ -->
+  <section>
+    <h2>El JSON que recibe la app</h2>
+    <p class="nota">Esto es exactamente lo que sirve la Edge Function y lee la APK.</p>
+    <button class="sec" onclick="verJson()">Ver JSON actual</button>
+    <pre id="salida-json">Pulsa el botón para cargar el JSON…</pre>
+  </section>
+
+  <p class="nota">
+    Nota de seguridad (demo): este panel escribe con la anon key para no
+    obligar al administrador a crear cuentas. Antes de publicar, activa
+    Supabase Auth y cambia las políticas de escritura para que solo el
+    admin autenticado pueda modificar (ver `supabase/schema.sql`).
+  </p>
+</main>
+
+<div id="estado"></div>
+
+<script>
+  // ============================================================
+  // CONFIGURACIÓN — rellenar con los datos del proyecto Supabase.
+  //   1. Crea el proyecto en supabase.com
+  //   2. Corre supabase/schema.sql y supabase/seed.sql en el editor SQL
+  //   3. Despliega la función: supabase functions deploy app-config
+  //   4. Copia aquí la URL y la anon key (Project Settings → API)
+  // ============================================================
+  const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+  const SUPABASE_ANON_KEY = "TU-ANON-KEY";
+  const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/app-config";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function aviso(texto) {
+    const el = document.getElementById("estado");
+    el.textContent = texto;
+    el.style.display = "block";
+    setTimeout(() => (el.style.display = "none"), 3000);
+  }
+
+  function escapeHtml(text) {
+    return String(text ?? "")
+      .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  }
+
+  // ---------------- Información del negocio ----------------
+  async function cargarInfo() {
+    const { data, error } = await supabase
+      .from("business_info").select("*").eq("id", 1).maybeSingle();
+    if (error || !data) return;
+    document.getElementById("info-nombre").value = data.nombre || "";
+    document.getElementById("info-eslogan").value = data.eslogan || "";
+    document.getElementById("info-descripcion").value = data.descripcion || "";
+    document.getElementById("info-ubicacion").value = data.ubicacion || "";
+    document.getElementById("info-instagram").value = data.instagram || "";
+    document.getElementById("info-tel1").value = data.telefono_reserva_1 || "";
+    document.getElementById("info-tel2").value = data.telefono_reserva_2 || "";
+  }
+
+  async function guardarInfo() {
+    const fila = {
+      id: 1,
+      nombre: document.getElementById("info-nombre").value.trim(),
+      eslogan: document.getElementById("info-eslogan").value.trim(),
+      descripcion: document.getElementById("info-descripcion").value.trim(),
+      ubicacion: document.getElementById("info-ubicacion").value.trim(),
+      instagram: document.getElementById("info-instagram").value.trim(),
+      telefono_reserva_1: document.getElementById("info-tel1").value.trim(),
+      telefono_reserva_2: document.getElementById("info-tel2").value.trim(),
+    };
+    const { error } = await supabase.from("business_info").upsert(fila);
+    aviso(error ? "Error al guardar: " + error.message : "Información guardada ✓");
+  }
+
+  // ---------------- Listas genéricas (horarios, precios, avisos) ----------------
+  async function cargarListas() {
+    const [hor, pre, anu] = await Promise.all([
+      supabase.from("schedules").select("*").order("orden"),
+      supabase.from("prices").select("*").order("orden"),
+      supabase.from("announcements").select("*").order("orden"),
+    ]);
+    document.getElementById("lista-horarios").innerHTML = (hor.data || []).map((h) =>
+      `<div class="item"><div><b>${escapeHtml(h.titulo)}</b><br><small>${escapeHtml(h.dias)} · ${escapeHtml(h.apertura)} – ${escapeHtml(h.cierre)}${h.nota ? " · " + escapeHtml(h.nota) : ""}</small></div><button class="danger" onclick="borrar('schedules', ${h.id})">Borrar</button></div>`
+    ).join("") || "<p class='nota'>Sin horarios todavía.</p>";
+
+    document.getElementById("lista-precios").innerHTML = (pre.data || []).map((p) =>
+      `<div class="item"><div><b>${escapeHtml(p.nombre)}</b><br><small>${p.precio_cup} CUP ${escapeHtml(p.unidad)}${p.descripcion ? " · " + escapeHtml(p.descripcion) : ""}</small></div><button class="danger" onclick="borrar('prices', ${p.id})">Borrar</button></div>`
+    ).join("") || "<p class='nota'>Sin precios todavía.</p>";
+
+    document.getElementById("lista-anuncios").innerHTML = (anu.data || []).map((a) =>
+      `<div class="item"><div><b>${escapeHtml(a.titulo)}</b> <small>(${escapeHtml(a.fecha)}) ${a.activo ? "" : "· inactivo"}</small><br><small>${escapeHtml(a.texto)}</small></div><button class="danger" onclick="borrar('announcements', ${a.id})">Borrar</button></div>`
+    ).join("") || "<p class='nota'>Sin avisos todavía.</p>";
+  }
+
+  async function borrar(tabla, id) {
+    if (!confirm("¿Borrar este registro?")) return;
+    const { error } = await supabase.from(tabla).delete().eq("id", id);
+    aviso(error ? "Error: " + error.message : "Borrado ✓");
+    cargarListas();
+  }
+
+  async function agregarHorario() {
+    const fila = {
+      titulo: document.getElementById("hor-titulo").value.trim(),
+      dias: document.getElementById("hor-dias").value.trim(),
+      apertura: document.getElementById("hor-apertura").value.trim(),
+      cierre: document.getElementById("hor-cierre").value.trim(),
+      nota: document.getElementById("hor-nota").value.trim(),
+    };
+    if (!fila.titulo) return aviso("Escribe al menos el título.");
+    const { error } = await supabase.from("schedules").insert(fila);
+    aviso(error ? "Error: " + error.message : "Horario agregado ✓");
+    cargarListas();
+  }
+
+  async function agregarPrecio() {
+    const fila = {
+      nombre: document.getElementById("pre-nombre").value.trim(),
+      descripcion: document.getElementById("pre-desc").value.trim(),
+      precio_cup: parseInt(document.getElementById("pre-precio").value, 10) || 0,
+      unidad: document.getElementById("pre-unidad").value.trim() || "por persona",
+    };
+    if (!fila.nombre) return aviso("Escribe al menos la modalidad.");
+    const { error } = await supabase.from("prices").insert(fila);
+    aviso(error ? "Error: " + error.message : "Precio agregado ✓");
+    cargarListas();
+  }
+
+  async function agregarAnuncio() {
+    const fila = {
+      titulo: document.getElementById("anu-titulo").value.trim(),
+      texto: document.getElementById("anu-texto").value.trim(),
+      fecha: document.getElementById("anu-fecha").value.trim(),
+      activo: true,
+    };
+    if (!fila.titulo) return aviso("Escribe al menos el título.");
+    const { error } = await supabase.from("announcements").insert(fila);
+    aviso(error ? "Error: " + error.message : "Aviso agregado ✓");
+    cargarListas();
+  }
+
+  // ---------------- Ver el JSON que recibe la app ----------------
+  async function verJson() {
+    const salida = document.getElementById("salida-json");
+    salida.textContent = "Cargando…";
+    try {
+      const res = await fetch(EDGE_FUNCTION_URL);
+      const json = await res.json();
+      salida.textContent = JSON.stringify(json, null, 2);
+    } catch (e) {
+      salida.textContent = "No se pudo cargar el JSON. Revisa la URL de la función y que esté desplegada.\n" + e;
+    }
+  }
+
+  // Arranque.
+  cargarInfo();
+  cargarListas();
+</script>
+</body>
+</html>
