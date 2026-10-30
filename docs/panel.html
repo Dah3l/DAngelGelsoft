@@ -4,120 +4,159 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel — D'Angel Gelsoft</title>
-<!-- Cliente oficial de Supabase (CDN). Sin esto el panel no conecta. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  /* Tema de la marca: fondo negro, acento turquesa, texto blanco. */
   :root { --teal: #00d1c1; --bg: #000; --card: #141414; --line: #2a2a2a; --muted: #bbb; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: #fff; font-family: system-ui, sans-serif; }
-  header { padding: 20px; border-bottom: 2px solid var(--teal); }
-  header h1 { margin: 0; font-size: 24px; }
-  header p { color: var(--muted); margin: 6px 0 0; }
+  header { padding: 18px 20px 12px; border-bottom: 2px solid var(--teal); }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+  nav.pills { position: sticky; top: 0; z-index: 10; background: #0a0a0a; padding: 10px 12px; display: flex; gap: 8px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+  nav.pills button { flex: 0 0 auto; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin: 0; }
+  nav.pills button.active { background: var(--teal); color: #000; border-color: var(--teal); }
   main { max-width: 820px; margin: 0 auto; padding: 20px; }
-  .banner { background: #1c2b29; border: 1px solid var(--teal); border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; }
+  .banner { background: #1c2b29; border: 1px solid var(--teal); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px; }
   .banner b { color: var(--teal); }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-  h2 { margin: 0 0 12px; font-size: 18px; }
+  section { margin-bottom: 8px; }
+  h2 { margin: 0 0 4px; font-size: 19px; }
+  .sec-desc { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
   label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
   input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: #1e1e1e; color: #fff; font-size: 15px; }
   textarea { min-height: 70px; }
   button { background: var(--teal); color: #000; border: 0; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
   button.sec { background: transparent; color: #fff; border: 1px solid var(--line); }
   button.danger { background: transparent; color: #ff7b7b; border: 1px solid #552222; padding: 6px 10px; font-size: 13px; margin: 0; }
+  button.icon { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 6px 10px; font-size: 14px; margin: 0; border-radius: 8px; }
+  button.icon:hover { color: #fff; border-color: var(--teal); }
   .row { display: flex; gap: 12px; align-items: flex-end; }
   .row > div { flex: 1; }
-  .item { border-top: 1px solid var(--line); padding: 12px 0; display: flex; justify-content: space-between; gap: 12px; }
-  .item small { color: var(--muted); }
-  #estado { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-weight: bold; padding: 10px 18px; border-radius: 999px; display: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .card .title { font-weight: bold; font-size: 16px; }
+  .card .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .card .actions { display: flex; gap: 6px; flex: 0 0 auto; }
+  .card.inactive { opacity: 0.55; }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-top: 8px; cursor: pointer; }
+  .toggle input { width: auto; accent-color: var(--teal); }
+  .formbox { background: var(--card); border: 1px dashed var(--teal); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .formbox h3 { margin: 0 0 6px; font-size: 16px; color: var(--teal); }
+  .form-actions { display: flex; gap: 10px; }
+  .empty { color: var(--muted); font-size: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 12px; }
+  #estado { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-weight: bold; padding: 10px 18px; border-radius: 999px; display: none; z-index: 20; max-width: 90%; text-align: center; }
   pre { background: #0d0d0d; border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
   .nota { color: var(--muted); font-size: 13px; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <header>
   <h1>Panel — D'Angel Gelsoft</h1>
-  <p>Edita el contenido de la app sin tocar código. Al guardar, la app lo muestra al instante.</p>
+  <p>Edita el contenido de la app sin tocar código. Al guardar, la app lo muestra en minutos.</p>
 </header>
+
+<nav class="pills" id="pills">
+  <button data-sec="info" class="active">Info</button>
+  <button data-sec="horarios">Horarios</button>
+  <button data-sec="precios">Precios</button>
+  <button data-sec="avisos">Avisos</button>
+  <button data-sec="json">JSON</button>
+</nav>
 
 <main>
   <div class="banner">
-    <b>Precios y modalidades de prueba:</b> los valores que ves abajo son
-    ejemplos para la demo. Cámbialos aquí con los reales del negocio y
-    listo: la app los muestra sola, sin actualizar la APK.
+    <b>Precios y modalidades de prueba:</b> los valores iniciales son
+    ejemplos para la demo. Cámbialos aquí con los reales del negocio:
+    la app los muestra sola, sin actualizar la APK.
   </div>
 
-  <!-- ============ INFORMACIÓN DEL NEGOCIO ============ -->
-  <section>
+  <!-- ============ INFO ============ -->
+  <section id="sec-info">
     <h2>Información del negocio</h2>
-    <label>Nombre</label>
-    <input id="info-nombre">
-    <label>Eslogan</label>
-    <input id="info-eslogan">
-    <label>Descripción</label>
-    <textarea id="info-descripcion"></textarea>
-    <label>Ubicación</label>
-    <input id="info-ubicacion">
-    <label>Instagram (sin @)</label>
-    <input id="info-instagram">
-    <div class="row">
-      <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
-      <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
+    <p class="sec-desc">Datos principales que muestra la app en la portada y en reservas.</p>
+    <div class="card">
+      <label>Nombre</label><input id="info-nombre">
+      <label>Eslogan</label><input id="info-eslogan">
+      <label>Descripción</label><textarea id="info-descripcion"></textarea>
+      <label>Ubicación</label><input id="info-ubicacion">
+      <label>Instagram (sin @)</label><input id="info-instagram">
+      <div class="row">
+        <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
+        <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
+      </div>
+      <button onclick="guardarInfo()">Guardar información</button>
     </div>
-    <button onclick="guardarInfo()">Guardar información</button>
   </section>
 
   <!-- ============ HORARIOS ============ -->
-  <section>
+  <section id="sec-horarios" hidden>
     <h2>Horarios</h2>
+    <p class="sec-desc">Cada horario es una tarjeta en la app. Puedes agregar varios, editarlos y cambiar su orden.</p>
     <div id="lista-horarios"></div>
-    <label>Título</label><input id="hor-titulo" placeholder="Ej: Horario regular">
-    <div class="row">
-      <div><label>Días</label><input id="hor-dias" placeholder="Ej: Lunes a domingo"></div>
-      <div><label>Apertura</label><input id="hor-apertura" placeholder="10:00 AM"></div>
-      <div><label>Cierre</label><input id="hor-cierre" placeholder="10:00 PM"></div>
+    <button class="sec" id="btn-add-horario" onclick="toggleForm('hor')">+ Agregar horario</button>
+    <div class="formbox" id="form-hor" hidden>
+      <h3 id="form-hor-titulo">Nuevo horario</h3>
+      <label>Título</label><input id="hor-titulo" placeholder="Ej: Horario regular">
+      <div class="row">
+        <div><label>Días</label><input id="hor-dias" placeholder="Ej: Lunes a domingo"></div>
+        <div><label>Apertura</label><input id="hor-apertura" placeholder="10:00 AM"></div>
+        <div><label>Cierre</label><input id="hor-cierre" placeholder="10:00 PM"></div>
+      </div>
+      <label>Nota</label><input id="hor-nota" placeholder="Ej: Abierto todos los días.">
+      <div class="form-actions">
+        <button id="btn-save-hor" onclick="guardarHorario()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('hor')">Cancelar</button>
+      </div>
     </div>
-    <label>Nota</label><input id="hor-nota" placeholder="Ej: Abierto todos los días.">
-    <button onclick="agregarHorario()">Agregar horario</button>
   </section>
 
   <!-- ============ PRECIOS ============ -->
-  <section>
+  <section id="sec-precios" hidden>
     <h2>Precios y modalidades</h2>
+    <p class="sec-desc">Cada modalidad es una tarjeta en la app. Puedes agregar varias, editarlas y cambiar su orden.</p>
     <div id="lista-precios"></div>
-    <label>Modalidad</label><input id="pre-nombre" placeholder="Ej: Sesión de día">
-    <label>Descripción</label><input id="pre-desc" placeholder="Ej: Partida diurna, incluye equipo.">
-    <div class="row">
-      <div><label>Precio (CUP)</label><input id="pre-precio" type="number" placeholder="500"></div>
-      <div><label>Unidad</label><input id="pre-unidad" value="por persona"></div>
+    <button class="sec" id="btn-add-precio" onclick="toggleForm('pre')">+ Agregar precio</button>
+    <div class="formbox" id="form-pre" hidden>
+      <h3 id="form-pre-titulo">Nuevo precio</h3>
+      <label>Modalidad</label><input id="pre-nombre" placeholder="Ej: Sesión de día">
+      <label>Descripción</label><input id="pre-desc" placeholder="Ej: Partida diurna, incluye equipo.">
+      <div class="row">
+        <div><label>Precio (CUP)</label><input id="pre-precio" type="number" placeholder="500"></div>
+        <div><label>Unidad</label><input id="pre-unidad" value="por persona"></div>
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-pre" onclick="guardarPrecio()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('pre')">Cancelar</button>
+      </div>
     </div>
-    <button onclick="agregarPrecio()">Agregar precio</button>
   </section>
 
   <!-- ============ AVISOS ============ -->
-  <section>
+  <section id="sec-avisos" hidden>
     <h2>Avisos y noches especiales</h2>
+    <p class="sec-desc">Solo los avisos <b>activos</b> salen en la app. Puedes desactivar uno sin borrarlo.</p>
     <div id="lista-anuncios"></div>
-    <label>Título</label><input id="anu-titulo" placeholder="Ej: Noche especial de gelsoft">
-    <label>Texto</label><textarea id="anu-texto"></textarea>
-    <label>Etiqueta de fecha</label><input id="anu-fecha" placeholder="Ej: Viernes">
-    <button onclick="agregarAnuncio()">Agregar aviso</button>
+    <button class="sec" id="btn-add-anu" onclick="toggleForm('anu')">+ Agregar aviso</button>
+    <div class="formbox" id="form-anu" hidden>
+      <h3 id="form-anu-titulo">Nuevo aviso</h3>
+      <label>Título</label><input id="anu-titulo" placeholder="Ej: Noche especial de gelsoft">
+      <label>Texto</label><textarea id="anu-texto"></textarea>
+      <label>Etiqueta de fecha</label><input id="anu-fecha" placeholder="Ej: Viernes">
+      <div class="form-actions">
+        <button id="btn-save-anu" onclick="guardarAviso()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('anu')">Cancelar</button>
+      </div>
+    </div>
   </section>
 
-  <!-- ============ VER EL JSON ============ -->
-  <section>
+  <!-- ============ JSON ============ -->
+  <section id="sec-json" hidden>
     <h2>El JSON que recibe la app</h2>
-    <p class="nota">Esto es exactamente lo que sirve la Edge Function y lee la APK.</p>
+    <p class="sec-desc">Esto es exactamente lo que lee la APK desde GitHub Pages (se actualiza solo cada 10 min).</p>
     <button class="sec" onclick="verJson()">Ver JSON actual</button>
     <pre id="salida-json">Pulsa el botón para cargar el JSON…</pre>
+    <p class="nota">Nota de seguridad (demo): este panel escribe con la anon key para no obligar al administrador a crear cuentas. Antes de publicar, activa Supabase Auth y limita la escritura al admin.</p>
   </section>
-
-  <p class="nota">
-    Nota de seguridad (demo): este panel escribe con la anon key para no
-    obligar al administrador a crear cuentas. Antes de publicar, activa
-    Supabase Auth y cambia las políticas de escritura para que solo el
-    admin autenticado pueda modificar (ver `supabase/schema.sql`).
-  </p>
 </main>
 
 <div id="estado"></div>
@@ -125,16 +164,26 @@
 <script>
   // ============================================================
   // CONFIGURACIÓN — rellenar con los datos del proyecto Supabase.
-  //   1. Crea el proyecto en supabase.com
-  //   2. Corre supabase/schema.sql y supabase/seed.sql en el editor SQL
-  //   3. Despliega la función: supabase functions deploy app-config
-  //   4. Copia aquí la URL y la anon key (Project Settings → API)
   // ============================================================
   const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
   const SUPABASE_ANON_KEY = "TU-ANON-KEY";
-  const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/app-config";
+  // El JSON que lee la app (GitHub Pages, modelo Aguacero). Si el panel
+  // se abre desde su propia URL en Pages, se deriva solo.
+  const JSON_URL = (location.protocol.startsWith("http"))
+    ? new URL("app-config.json", location.href).href
+    : "https://dah3l.github.io/DAngelGelsoft/app-config.json";
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ---------- Navegación por pills ----------
+  document.getElementById("pills").addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document.querySelectorAll("#pills button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("main > section").forEach(s => s.hidden = true);
+    document.getElementById("sec-" + btn.dataset.sec).hidden = false;
+  });
 
   function aviso(texto) {
     const el = document.getElementById("estado");
@@ -177,34 +226,118 @@
     aviso(error ? "Error al guardar: " + error.message : "Información guardada ✓");
   }
 
-  // ---------------- Listas genéricas (horarios, precios, avisos) ----------------
+  // ---------------- Listas: cargar + pintar ----------------
+  let editando = { seccion: null, id: null };
+
   async function cargarListas() {
     const [hor, pre, anu] = await Promise.all([
       supabase.from("schedules").select("*").order("orden"),
       supabase.from("prices").select("*").order("orden"),
       supabase.from("announcements").select("*").order("orden"),
     ]);
-    document.getElementById("lista-horarios").innerHTML = (hor.data || []).map((h) =>
-      `<div class="item"><div><b>${escapeHtml(h.titulo)}</b><br><small>${escapeHtml(h.dias)} · ${escapeHtml(h.apertura)} – ${escapeHtml(h.cierre)}${h.nota ? " · " + escapeHtml(h.nota) : ""}</small></div><button class="danger" onclick="borrar('schedules', ${h.id})">Borrar</button></div>`
-    ).join("") || "<p class='nota'>Sin horarios todavía.</p>";
-
-    document.getElementById("lista-precios").innerHTML = (pre.data || []).map((p) =>
-      `<div class="item"><div><b>${escapeHtml(p.nombre)}</b><br><small>${p.precio_cup} CUP ${escapeHtml(p.unidad)}${p.descripcion ? " · " + escapeHtml(p.descripcion) : ""}</small></div><button class="danger" onclick="borrar('prices', ${p.id})">Borrar</button></div>`
-    ).join("") || "<p class='nota'>Sin precios todavía.</p>";
-
-    document.getElementById("lista-anuncios").innerHTML = (anu.data || []).map((a) =>
-      `<div class="item"><div><b>${escapeHtml(a.titulo)}</b> <small>(${escapeHtml(a.fecha)}) ${a.activo ? "" : "· inactivo"}</small><br><small>${escapeHtml(a.texto)}</small></div><button class="danger" onclick="borrar('announcements', ${a.id})">Borrar</button></div>`
-    ).join("") || "<p class='nota'>Sin avisos todavía.</p>";
+    pintarHorarios(hor.data || []);
+    pintarPrecios(pre.data || []);
+    pintarAvisos(anu.data || []);
   }
 
-  async function borrar(tabla, id) {
-    if (!confirm("¿Borrar este registro?")) return;
-    const { error } = await supabase.from(tabla).delete().eq("id", id);
-    aviso(error ? "Error: " + error.message : "Borrado ✓");
-    cargarListas();
+  function acciones(tabla, sec, id) {
+    return `<div class="actions">
+      <button class="icon" title="Editar" onclick="empezarEdicion('${sec}', ${id})">✏️</button>
+      <button class="icon" title="Subir" onclick="mover('${tabla}', ${id}, -1)">↑</button>
+      <button class="icon" title="Bajar" onclick="mover('${tabla}', ${id}, 1)">↓</button>
+      <button class="danger" title="Borrar" onclick="borrar('${tabla}', ${id})">🗑</button>
+    </div>`;
   }
 
-  async function agregarHorario() {
+  function pintarHorarios(items) {
+    const el = document.getElementById("lista-horarios");
+    el.innerHTML = items.map((h) => `
+      <div class="card"><div class="top">
+        <div><div class="title">${escapeHtml(h.titulo)}</div>
+        <div class="sub">${escapeHtml(h.dias)} · ${escapeHtml(h.apertura)} – ${escapeHtml(h.cierre)}${h.nota ? " · " + escapeHtml(h.nota) : ""}</div></div>
+        ${acciones("schedules", "hor", h.id)}
+      </div></div>`).join("")
+      || `<div class="empty">Sin horarios todavía. Agrega el primero con el botón de abajo.</div>`;
+  }
+
+  function pintarPrecios(items) {
+    const el = document.getElementById("lista-precios");
+    el.innerHTML = items.map((p) => `
+      <div class="card"><div class="top">
+        <div><div class="title">${escapeHtml(p.nombre)} — ${p.precio_cup} CUP</div>
+        <div class="sub">${escapeHtml(p.unidad)}${p.descripcion ? " · " + escapeHtml(p.descripcion) : ""}</div></div>
+        ${acciones("prices", "pre", p.id)}
+      </div></div>`).join("")
+      || `<div class="empty">Sin precios todavía. Agrega el primero con el botón de abajo.</div>`;
+  }
+
+  function pintarAvisos(items) {
+    const el = document.getElementById("lista-anuncios");
+    el.innerHTML = items.map((a) => `
+      <div class="card${a.activo ? "" : " inactive"}"><div class="top">
+        <div><div class="title">${escapeHtml(a.titulo)}</div>
+        <div class="sub">${escapeHtml(a.fecha)}${a.activo ? "" : " · inactivo"}<br>${escapeHtml(a.texto)}</div>
+        <label class="toggle"><input type="checkbox" ${a.activo ? "checked" : ""} onchange="toggleAviso(${a.id}, this.checked)"> Visible en la app</label></div>
+        ${acciones("announcements", "anu", a.id)}
+      </div></div>`).join("")
+      || `<div class="empty">Sin avisos todavía. Agrega el primero con el botón de abajo.</div>`;
+  }
+
+  // ---------------- Formularios: mostrar / editar / cancelar ----------------
+  function toggleForm(sec) {
+    const form = document.getElementById("form-" + sec);
+    form.hidden = !form.hidden;
+    if (!form.hidden) editando = { seccion: null, id: null };
+  }
+
+  function limpiarForm(sec) {
+    const ids = {
+      hor: ["hor-titulo", "hor-dias", "hor-apertura", "hor-cierre", "hor-nota"],
+      pre: ["pre-nombre", "pre-desc", "pre-precio", "pre-unidad"],
+      anu: ["anu-titulo", "anu-texto", "anu-fecha"],
+    }[sec];
+    ids.forEach(id => document.getElementById(id).value = id === "pre-unidad" ? "por persona" : "");
+  }
+
+  function cancelarEdicion(sec) {
+    document.getElementById("form-" + sec).hidden = true;
+    limpiarForm(sec);
+    editando = { seccion: null, id: null };
+    const titulos = { hor: "Nuevo horario", pre: "Nuevo precio", anu: "Nuevo aviso" };
+    const botones = { hor: "Agregar", pre: "Agregar", anu: "Agregar" };
+    document.getElementById("form-" + sec + "-titulo").textContent = titulos[sec];
+    document.getElementById("btn-save-" + sec).textContent = botones[sec];
+  }
+
+  async function empezarEdicion(sec, id) {
+    const tablas = { hor: "schedules", pre: "prices", anu: "announcements" };
+    const { data, error } = await supabase.from(tablas[sec]).select("*").eq("id", id).maybeSingle();
+    if (error || !data) return aviso("No se pudo cargar el registro.");
+    if (sec === "hor") {
+      document.getElementById("hor-titulo").value = data.titulo || "";
+      document.getElementById("hor-dias").value = data.dias || "";
+      document.getElementById("hor-apertura").value = data.apertura || "";
+      document.getElementById("hor-cierre").value = data.cierre || "";
+      document.getElementById("hor-nota").value = data.nota || "";
+    } else if (sec === "pre") {
+      document.getElementById("pre-nombre").value = data.nombre || "";
+      document.getElementById("pre-desc").value = data.descripcion || "";
+      document.getElementById("pre-precio").value = data.precio_cup ?? "";
+      document.getElementById("pre-unidad").value = data.unidad || "por persona";
+    } else {
+      document.getElementById("anu-titulo").value = data.titulo || "";
+      document.getElementById("anu-texto").value = data.texto || "";
+      document.getElementById("anu-fecha").value = data.fecha || "";
+    }
+    editando = { seccion: sec, id };
+    document.getElementById("form-" + sec).hidden = false;
+    document.getElementById("form-" + sec + "-titulo").textContent = "Editar";
+    document.getElementById("btn-save-" + sec).textContent = "Guardar cambios";
+    document.getElementById("form-" + sec).scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // ---------------- Guardar (nuevo o edición) ----------------
+  async function guardarHorario() {
     const fila = {
       titulo: document.getElementById("hor-titulo").value.trim(),
       dias: document.getElementById("hor-dias").value.trim(),
@@ -213,12 +346,17 @@
       nota: document.getElementById("hor-nota").value.trim(),
     };
     if (!fila.titulo) return aviso("Escribe al menos el título.");
-    const { error } = await supabase.from("schedules").insert(fila);
-    aviso(error ? "Error: " + error.message : "Horario agregado ✓");
-    cargarListas();
+    let error;
+    if (editando.seccion === "hor" && editando.id) {
+      ({ error } = await supabase.from("schedules").update(fila).eq("id", editando.id));
+    } else {
+      ({ error } = await supabase.from("schedules").insert({ ...fila, orden: Date.now() }));
+    }
+    aviso(error ? "Error: " + error.message : "Horario guardado ✓");
+    if (!error) { cancelarEdicion("hor"); cargarListas(); }
   }
 
-  async function agregarPrecio() {
+  async function guardarPrecio() {
     const fila = {
       nombre: document.getElementById("pre-nombre").value.trim(),
       descripcion: document.getElementById("pre-desc").value.trim(),
@@ -226,21 +364,56 @@
       unidad: document.getElementById("pre-unidad").value.trim() || "por persona",
     };
     if (!fila.nombre) return aviso("Escribe al menos la modalidad.");
-    const { error } = await supabase.from("prices").insert(fila);
-    aviso(error ? "Error: " + error.message : "Precio agregado ✓");
-    cargarListas();
+    let error;
+    if (editando.seccion === "pre" && editando.id) {
+      ({ error } = await supabase.from("prices").update(fila).eq("id", editando.id));
+    } else {
+      ({ error } = await supabase.from("prices").insert({ ...fila, orden: Date.now() }));
+    }
+    aviso(error ? "Error: " + error.message : "Precio guardado ✓");
+    if (!error) { cancelarEdicion("pre"); cargarListas(); }
   }
 
-  async function agregarAnuncio() {
+  async function guardarAviso() {
     const fila = {
       titulo: document.getElementById("anu-titulo").value.trim(),
       texto: document.getElementById("anu-texto").value.trim(),
       fecha: document.getElementById("anu-fecha").value.trim(),
-      activo: true,
     };
     if (!fila.titulo) return aviso("Escribe al menos el título.");
-    const { error } = await supabase.from("announcements").insert(fila);
-    aviso(error ? "Error: " + error.message : "Aviso agregado ✓");
+    let error;
+    if (editando.seccion === "anu" && editando.id) {
+      ({ error } = await supabase.from("announcements").update(fila).eq("id", editando.id));
+    } else {
+      ({ error } = await supabase.from("announcements").insert({ ...fila, activo: true, orden: Date.now() }));
+    }
+    aviso(error ? "Error: " + error.message : "Aviso guardado ✓");
+    if (!error) { cancelarEdicion("anu"); cargarListas(); }
+  }
+
+  // ---------------- Borrar / mover / toggle ----------------
+  async function borrar(tabla, id) {
+    if (!confirm("¿Borrar este registro?")) return;
+    const { error } = await supabase.from(tabla).delete().eq("id", id);
+    aviso(error ? "Error: " + error.message : "Borrado ✓");
+    cargarListas();
+  }
+
+  async function mover(tabla, id, dir) {
+    const { data, error } = await supabase.from(tabla).select("id,orden").order("orden");
+    if (error || !data) return;
+    const i = data.findIndex(r => r.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= data.length) return;
+    const a = data[i], b = data[j];
+    await supabase.from(tabla).update({ orden: b.orden }).eq("id", a.id);
+    await supabase.from(tabla).update({ orden: a.orden }).eq("id", b.id);
+    cargarListas();
+  }
+
+  async function toggleAviso(id, activo) {
+    const { error } = await supabase.from("announcements").update({ activo }).eq("id", id);
+    aviso(error ? "Error: " + error.message : (activo ? "Aviso visible ✓" : "Aviso oculto ✓"));
     cargarListas();
   }
 
@@ -249,11 +422,11 @@
     const salida = document.getElementById("salida-json");
     salida.textContent = "Cargando…";
     try {
-      const res = await fetch(EDGE_FUNCTION_URL);
+      const res = await fetch(JSON_URL);
       const json = await res.json();
       salida.textContent = JSON.stringify(json, null, 2);
     } catch (e) {
-      salida.textContent = "No se pudo cargar el JSON. Revisa la URL de la función y que esté desplegada.\n" + e;
+      salida.textContent = "No se pudo cargar el JSON. Revisa que GitHub Pages esté activo.\n" + e;
     }
   }
 
