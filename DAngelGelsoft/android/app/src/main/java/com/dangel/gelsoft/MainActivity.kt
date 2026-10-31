@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -28,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,6 +72,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val activity = this
         openAnnouncementsOnStart =
             intent?.getBooleanExtra(AnnouncementNotifier.EXTRA_OPEN_ANNOUNCEMENTS, false) == true
         setContent {
@@ -82,9 +85,26 @@ class MainActivity : ComponentActivity() {
                 val overlay: MutableState<String?> = remember { mutableStateOf<String?>(null) }
                 var unread by remember { mutableIntStateOf(0) }
 
-                // System back closes overlays first.
-                BackHandler(enabled = overlay.value != null) {
-                    overlay.value = null
+                // Back: overlay -> previous screen · any tab -> Home · Home: double-press to exit.
+                var lastBackPress by remember { mutableLongStateOf(0L) }
+                BackHandler(enabled = true) {
+                    when {
+                        overlay.value != null -> overlay.value = null
+                        tab.value != 0 -> tab.value = 0
+                        else -> {
+                            val now = System.currentTimeMillis()
+                            if (now - lastBackPress < 2000) {
+                                activity.finish()
+                            } else {
+                                lastBackPress = now
+                                Toast.makeText(
+                                    context,
+                                    "Pulsa de nuevo para salir",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
+                        }
+                    }
                 }
 
                 // 1. Instant: cached content, never a spinner.
