@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,11 +26,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dangel.gelsoft.data.AppConfig
+import com.dangel.gelsoft.data.ProfileStore
 import com.dangel.gelsoft.data.SupabaseDirect
 import kotlinx.coroutines.launch
 
@@ -39,13 +42,29 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun MyReservationsScreen(config: AppConfig) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var telefono by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf(ProfileStore.getTelefono(context)) }
     var loading by remember { mutableStateOf(false) }
     var searched by remember { mutableStateOf(false) }
     var reservas by remember { mutableStateOf<List<SupabaseDirect.MyReservation>>(emptyList()) }
 
     val blockNames = config.blocks.associate { it.id to it.name }
+
+    fun buscar() {
+        loading = true
+        searched = false
+        scope.launch {
+            reservas = SupabaseDirect.myReservations(telefono)
+            loading = false
+            searched = true
+        }
+    }
+
+    // If the profile already has a phone, search automatically.
+    LaunchedEffect(Unit) {
+        if (telefono.filter { it.isDigit() }.length >= 8) buscar()
+    }
 
     Column(
         modifier = Modifier
@@ -71,15 +90,7 @@ fun MyReservationsScreen(config: AppConfig) {
         )
         Spacer(modifier = Modifier.height(12.dp))
         Button(
-            onClick = {
-                loading = true
-                searched = false
-                scope.launch {
-                    reservas = SupabaseDirect.myReservations(telefono)
-                    loading = false
-                    searched = true
-                }
-            },
+            onClick = { buscar() },
             enabled = !loading && telefono.filter { it.isDigit() }.length >= 8,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
