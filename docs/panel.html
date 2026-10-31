@@ -63,13 +63,13 @@
 </header>
 
 <nav class="pills" id="pills">
-  <button data-sec="info" class="active">Info</button>
+  <button data-sec="reservas" class="active">Reservas</button>
+  <button data-sec="info">Info</button>
   <button data-sec="horarios">Horarios</button>
   <button data-sec="precios">Precios</button>
   <button data-sec="avisos">Avisos</button>
   <button data-sec="galeria">Galería</button>
   <button data-sec="bloques">Bloques</button>
-  <button data-sec="reservas">Reservas</button>
   <button data-sec="json">JSON</button>
 </nav>
 
@@ -81,7 +81,7 @@
   </div>
 
   <!-- ============ INFO ============ -->
-  <section id="sec-info">
+  <section id="sec-info" hidden>
     <h2>Información del negocio</h2>
     <p class="sec-desc">Datos principales que muestra la app en la portada y en reservas.</p>
     <div class="card">
@@ -217,7 +217,7 @@
   </section>
 
   <!-- ============ RESERVAS ============ -->
-  <section id="sec-reservas" hidden>
+  <section id="sec-reservas">
     <h2>Reservas</h2>
     <p class="sec-desc">Solicitudes de los clientes. Acepta o rechaza; al decidir, avisa al cliente por WhatsApp con un toque.</p>
     <div class="row" style="margin-bottom:12px">
