@@ -8,17 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Loads the app content with this priority order:
+ * Loads the app content.
  *
- *  1. Network: the single JSON from the Supabase Edge Function `app-config`.
- *     On success the JSON is saved to the local cache.
- *  2. Local cache: the last JSON downloaded. This is what makes the app work
- *     offline — important for clients without VPN or without connection.
- *  3. Bundled fallback: `assets/config.json`, shipped inside the APK, so the
- *     demo runs standalone before any Supabase project exists.
+ * Offline-first: [loadCached] returns instantly from the local cache (or
+ * the bundled fallback) so the app NEVER shows an infinite spinner.
+ * [refreshFromNetwork] then updates in the background when there is
+ * connection; the UI swaps in the fresh data silently.
  *
- * To point the app at a real backend, replace ENDPOINT_URL with the deployed
- * JSON URL (GitHub Pages, modelo Aguacero).
+ * Priority: 1. network (background refresh) 2. local cache 3. bundled.
  */
 object ConfigRepository {
 
@@ -35,28 +32,49 @@ object ConfigRepository {
         val source: String,
     )
 
-    suspend fun load(context: Context): LoadResult = withContext(Dispatchers.IO) {
-        // 1. Network (skipped while the endpoint URL is still a placeholder).
-        if (!ENDPOINT_URL.contains("TU-PROYECTO")) {
-            try {
-                val connection = URL(ENDPOINT_URL).openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 8000
-                connection.readTimeout = 8000
-                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                    val text = connection.inputStream.bufferedReader().readText()
-                    connection.disconnect()
-                    // Save to cache before parsing, so a later offline open works.
-                    File(context.filesDir, CACHE_FILE).writeText(text)
-                    return@withContext LoadResult(parseConfig(text), offline = false, source = "red")
-                }
-                connection.disconnect()
-            } catch (_: Exception) {
-                // No connection, timeout, bad URL... fall through to cache.
+    /** Instant: cache or bundled fallback. Never touches the network. */
+    fun loadCached(context: Context): AppConfig {
+        try {
+            val cache = File(context.filesDir, CACHE_FILE)
+            if (cache.exists()) {
+                val text = cache.readText()
+                if (text.isNotBlank()) return parseConfig(text)
             }
+        } catch (_: Exception) {
+            // Corrupt cache: fall through to the bundled fallback.
         }
+        val fallback = context.assets.open("config.json").bufferedReader().readText()
+        return parseConfig(fallback)
+    }
 
-        // 2. Local cache from a previous successful download.
+    /**
+     * Background refresh: tries the network, saves to cache and returns
+     * the fresh config; returns null when offline or on any error.
+     */
+    suspend fun refreshFromNetwork(context: Context): AppConfig? = withContext(Dispatchers.IO) {
+        if (ENDPOINT_URL.contains("TU-PROYECTO")) return@withContext null
+        try {
+            val connection = URL(ENDPOINT_URL).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 8000
+            connection.readTimeout = 8000
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                val text = connection.inputStream.bufferedReader().readText()
+                connection.disconnect()
+                File(context.filesDir, CACHE_FILE).writeText(text)
+                return@withContext parseConfig(text)
+            }
+            connection.disconnect()
+        } catch (_: Exception) {
+            // No connection, timeout, bad URL... the cached content stays.
+        }
+        null
+    }
+
+    /** Legacy full load (network → cache → bundled). Kept for compat. */
+    suspend fun load(context: Context): LoadResult = withContext(Dispatchers.IO) {
+        val fresh = refreshFromNetwork(context)
+        if (fresh != null) return@withContext LoadResult(fresh, offline = false, source = "red")
         try {
             val cache = File(context.filesDir, CACHE_FILE)
             if (cache.exists()) {
@@ -68,8 +86,6 @@ object ConfigRepository {
         } catch (_: Exception) {
             // Corrupt cache: fall through to the bundled fallback.
         }
-
-        // 3. Bundled fallback shipped inside the APK. Always available.
         val fallback = context.assets.open("config.json").bufferedReader().readText()
         LoadResult(parseConfig(fallback), offline = true, source = "incluido")
     }
