@@ -19,6 +19,8 @@ data class BusinessInfo(
     val phone2: String,
     val website: String,
     val email: String,
+    /** % del total que se cobra por adelantado (ej. 50). */
+    val adelantoPct: Int,
 )
 
 data class ScheduleItem(
@@ -62,6 +64,8 @@ data class BlockItem(
     val endTime: String,
     /** Comma-separated day numbers: 1=Mon … 7=Sun (java.time DayOfWeek). */
     val days: String,
+    /** Price per person in CUP. */
+    val price: Double,
 ) {
     fun appliesTo(dayOfWeek: Int): Boolean =
         days.split(",").mapNotNull { it.trim().toIntOrNull() }.contains(dayOfWeek)
@@ -91,6 +95,7 @@ fun parseConfig(jsonText: String): AppConfig {
         phone2 = infoJson.optString("telefono_reserva_2", "+53 58878734"),
         website = infoJson.optString("sitio_web", ""),
         email = infoJson.optString("correo", ""),
+        adelantoPct = infoJson.optInt("adelanto_pct", 50),
     )
 
     val schedules = mutableListOf<ScheduleItem>()
@@ -183,6 +188,7 @@ fun parseConfig(jsonText: String): AppConfig {
                     startTime = item.optString("hora_inicio", ""),
                     endTime = item.optString("hora_fin", ""),
                     days = item.optString("dias", "1,2,3,4,5,6"),
+                    price = item.optDouble("precio", 0.0),
                 )
             )
         }
