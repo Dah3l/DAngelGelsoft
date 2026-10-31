@@ -1,7 +1,9 @@
 package com.dangel.gelsoft.ui.screens
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,19 +14,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -33,63 +38,102 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dangel.gelsoft.data.AppConfig
-import java.util.Calendar
+import com.dangel.gelsoft.data.BlockItem
+import com.dangel.gelsoft.data.SupabaseDirect
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 /**
- * Reservation form with WhatsApp checkout.
- *
- * The reservation is NOT written to any database. The form builds a summary
- * message and opens WhatsApp (wa.me) to the business's reservation number
- * with the message already written — the user only taps "send".
- * This matches how the business already takes reservations today (by chat),
- * but with the data organized instead of a free-form message.
+ * Reservation v2: pick a date → choose a free block → fill the form.
+ * The reservation is saved as "pendiente"; the admin accepts it in the
+ * web panel. The DB unique index is the final guard against double booking.
  */
 @Composable
-fun ReservationScreen(config: AppConfig) {
+fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: () -> Unit) {
     val context = LocalContext.current
-    val info = config.info
+    val scope = rememberCoroutineScope()
+
+    var fecha by remember { mutableStateOf(LocalDate.now()) }
+    var bloque by remember { mutableStateOf<BlockItem?>(null) }
+    var taken by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    var loadingSlots by remember { mutableStateOf(false) }
 
     var nombre by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
-    var fecha by remember { mutableStateOf("") }
-    var sesion by remember { mutableStateOf("Sesión de día") }
-    var hora by remember { mutableStateOf("10:00 AM") }
-    var jugadores by remember { mutableStateOf("4") }
-    var error by remember { mutableStateOf("") }
+    var personas by remember { mutableIntStateOf(1) }
 
-    // Time options depend on the session: the night experience starts at night.
-    val horasDia = listOf(
-        "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
-        "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM",
-    )
-    val horasNoche = listOf("8:00 PM", "9:00 PM")
-    val horasDisponibles = if (sesion.contains("nocturna", ignoreCase = true)) horasNoche else horasDia
+    var sending by remember { mutableStateOf(false) }
+    var result by remember { mutableStateOf<SupabaseDirect.InsertResult?>(null) }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
 
-    // Estimated total from the published prices (for the message summary only).
-    val precioSesion = config.prices.firstOrNull {
-        if (sesion.contains("nocturna", ignoreCase = true)) {
-            it.name.contains("nocturna", ignoreCase = true)
-        } else {
-            it.name.contains("día", ignoreCase = true)
+    val fechaStr = fecha.format(DateTimeFormatter.ISO_LOCAL_DATE)
+    val dayOfWeek = fecha.dayOfWeek.value // 1=Mon … 7=Sun
+    val availableBlocks = config.blocks.filter { it.appliesTo(dayOfWeek) }
+
+    fun reloadSlots() {
+        loadingSlots = true
+        bloque = null
+        scope.launch {
+            taken = SupabaseDirect.takenBlocks(fechaStr)
+            loadingSlots = false
         }
     }
-    val cantidadJugadores = jugadores.toIntOrNull() ?: 0
-    val totalEstimado = if (precioSesion != null && cantidadJugadores > 0) {
-        precioSesion.priceCup * cantidadJugadores
-    } else {
-        null
-    }
 
-    val calendar = Calendar.getInstance()
-    val datePicker = DatePickerDialog(
-        context,
-        { _, year, month, day ->
-            fecha = "%02d/%02d/%d".format(day, month + 1, year)
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH),
-    )
+    LaunchedEffect(fechaStr) { reloadSlots() }
+
+    // ---------- Success view ----------
+    if (result is SupabaseDirect.InsertResult.Ok && bloque != null) {
+        val b = bloque!!
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text("✔", fontSize = 48.sp, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "¡Solicitud registrada!",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "$fechaStr · Bloque ${b.name} (${b.startTime} – ${b.endTime})",
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "El administrador la revisará. Toca el botón para avisarle por WhatsApp y agilizar la confirmación.",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(
+                onClick = {
+                    val msg = "¡Hola! Soy $nombre, acabo de solicitar una reserva en D'Angel Gelsoft: " +
+                        "$fechaStr, bloque ${b.name} (${b.startTime}-${b.endTime}), $personas persona(s). " +
+                        "Mi teléfono: $telefono. Revísala aquí: ${SupabaseDirect.PANEL_RESERVAS_URL}"
+                    openWhatsApp(context, config.info.phone1, msg)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.Black,
+                ),
+            ) {
+                Text("Avisar al administrador por WhatsApp", fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+                Text("Volver")
+            }
+        }
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -100,12 +144,70 @@ fun ReservationScreen(config: AppConfig) {
         Text("Reservar", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "Llena los datos y se abrirá WhatsApp con tu reserva ya escrita. Solo toca enviar.",
+            "Elige el día y el bloque. La reserva queda pendiente hasta que el administrador la confirme.",
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ---------- Fecha ----------
+        Text("1. Elige el día", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = {
+                DatePickerDialog(
+                    context,
+                    { _, y, m, d -> fecha = LocalDate.of(y, m + 1, d) },
+                    fecha.year, fecha.monthValue - 1, fecha.dayOfMonth,
+                ).apply {
+                    datePicker.minDate = System.currentTimeMillis()
+                }.show()
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(fecha.format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM yyyy")))
+        }
+
+        // ---------- Bloque ----------
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("2. Elige el bloque", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        if (availableBlocks.isEmpty()) {
+            Text(
+                "No hay bloques este día. Prueba con otra fecha.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else if (loadingSlots) {
+            CircularProgressIndicator()
+        } else {
+            for (b in availableBlocks) {
+                val isTaken = taken.contains(b.id)
+                val isSelected = bloque?.id == b.id
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { if (!isTaken) bloque = b },
+                    enabled = !isTaken,
+                    label = {
+                        Text(
+                            "${b.name}: ${b.startTime} – ${b.endTime}" +
+                                if (isTaken) " (ocupado)" else ""
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.Black,
+                    ),
+                )
+            }
+        }
+
+        // ---------- Datos ----------
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("3. Tus datos", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
@@ -113,147 +215,77 @@ fun ReservationScreen(config: AppConfig) {
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = telefono,
             onValueChange = { telefono = it },
-            label = { Text("Tu teléfono") },
+            label = { Text("Teléfono / WhatsApp") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedButton(
-            onClick = { datePicker.show() },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(if (fecha.isBlank()) "Elegir día" else "Día: $fecha")
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        DropdownField(
-            label = "Sesión",
-            options = listOf("Sesión de día", "Experiencia nocturna"),
-            selected = sesion,
-            onSelected = {
-                sesion = it
-                // Al cambiar de sesión, la hora vuelve a una válida para ella.
-                hora = if (it.contains("nocturna", ignoreCase = true)) horasNoche.first() else horasDia.first()
-            },
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        DropdownField(
-            label = "Hora",
-            options = horasDisponibles,
-            selected = hora,
-            onSelected = { hora = it },
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = jugadores,
-            onValueChange = { jugadores = it.filter { char -> char.isDigit() } },
-            label = { Text("Cantidad de jugadores") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        )
-
-        if (totalEstimado != null && precioSesion != null) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "Total estimado: $totalEstimado CUP " +
-                    "(${precioSesion.priceCup} CUP ${precioSesion.unit} × $cantidadJugadores)",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-            )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Personas: ", fontSize = 15.sp)
+            OutlinedButton(onClick = { if (personas > 1) personas-- }) { Text("−") }
+            Text(" $personas ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            OutlinedButton(onClick = { if (personas < 50) personas++ }) { Text("+") }
         }
 
-        if (error.isNotBlank()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(error, fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
+        errorMsg?.let {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                when {
-                    nombre.isBlank() -> error = "Escribe tu nombre."
-                    telefono.isBlank() -> error = "Escribe tu teléfono."
-                    fecha.isBlank() -> error = "Elige el día de la reserva."
-                    cantidadJugadores <= 0 -> error = "Indica cuántos jugadores son."
-                    else -> {
-                        error = ""
-                        val mensaje = buildString {
-                            append("¡Hola D'Angel Gelsoft! Quiero hacer una reserva:\n")
-                            append("• Nombre: $nombre\n")
-                            append("• Teléfono: $telefono\n")
-                            append("• Día: $fecha\n")
-                            append("• Hora: $hora\n")
-                            append("• Sesión: $sesion\n")
-                            append("• Jugadores: $cantidadJugadores\n")
-                            if (totalEstimado != null) {
-                                append("• Total estimado: $totalEstimado CUP (según precios publicados en la app)")
-                            }
-                        }
-                        openWhatsApp(context, info.phone1, mensaje)
+                errorMsg = null
+                if (bloque == null) {
+                    errorMsg = "Elige un bloque primero."
+                    return@Button
+                }
+                if (nombre.isBlank() || telefono.filter { it.isDigit() }.length < 8) {
+                    errorMsg = "Escribe tu nombre y un teléfono válido."
+                    return@Button
+                }
+                sending = true
+                scope.launch {
+                    result = SupabaseDirect.insertReservation(
+                        bloque!!.id, fechaStr, nombre.trim(),
+                        telefono.trim(), personas,
+                    )
+                    sending = false
+                    if (result is SupabaseDirect.InsertResult.JustTaken) {
+                        errorMsg = "Ese bloque se acaba de ocupar. Elige otro."
+                        reloadSlots()
+                    } else if (result is SupabaseDirect.InsertResult.Error) {
+                        errorMsg = "No se pudo guardar: " +
+                            (result as SupabaseDirect.InsertResult.Error).message
                     }
                 }
             },
+            enabled = !sending,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.Black,
             ),
         ) {
-            Text("Enviar reserva por WhatsApp", fontWeight = FontWeight.Bold)
+            if (sending) CircularProgressIndicator(color = Color.Black)
+            else Text("Enviar solicitud", fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            "La reserva llega como mensaje de WhatsApp al número ${info.phone1}. " +
-                "También puedes escribir directo al ${info.phone2}.",
-            fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DropdownField(
-    label: String,
-    options: List<String>,
-    selected: String,
-    onSelected: (String) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-    ) {
-        OutlinedTextField(
-            value = selected,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            for (option in options) {
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onSelected(option)
-                        expanded = false
-                    },
-                )
-            }
+        OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+            Text("Cancelar")
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        androidx.compose.material3.TextButton(
+            onClick = onMyReservations,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Ver mis reservas", color = MaterialTheme.colorScheme.primary)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
