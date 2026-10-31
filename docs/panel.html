@@ -241,7 +241,7 @@
       telefono_reserva_2: document.getElementById("info-tel2").value.trim(),
     };
     try {
-      await sb("POST", "/business_info?onConflict=id", fila);
+      await sb("POST", "/business_info", fila);
       aviso("Información guardada ✓");
     } catch (e) { aviso("Error al guardar: " + e.message); }
   }
