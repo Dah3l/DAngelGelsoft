@@ -230,8 +230,9 @@
   <!-- ============ JSON ============ -->
   <section id="sec-json" hidden>
     <h2>El JSON que recibe la app</h2>
-    <p class="sec-desc">Esto es exactamente lo que lee la APK desde GitHub Pages (se actualiza solo cada 10 min).</p>
+    <p class="sec-desc">Esto es exactamente lo que lee la APK desde GitHub Pages. Cada cambio que guardas dispara la sincronización al instante (tarda ~1-2 min en verse en la app).</p>
     <button class="sec" onclick="verJson()">Ver JSON actual</button>
+    <button class="sec" onclick="cambiarToken()">Cambiar token de GitHub</button>
     <pre id="salida-json">Pulsa el botón para cargar el JSON…</pre>
     <p class="nota">Nota de seguridad (demo): este panel escribe con la anon key para no obligar al administrador a crear cuentas. Antes de publicar, activa Supabase Auth y limita la escritura al admin.</p>
   </section>
@@ -245,6 +246,56 @@
   // ============================================================
   const SUPABASE_URL = "https://cxkacnymioovvhvwqlsj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4a2FjbnltaW9vdnZodndxbHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMjI2ODEsImV4cCI6MjEwODg5ODY4MX0.shNDQbIqO3qPU2bngrD6SyC49gCfv84jJYjz7uYBTyc";
+
+/* ===== Sincronización instantánea: el panel dispara el workflow ===== */
+const GH_REPO = "Dah3l/DAngelGelsoft";
+const GH_WORKFLOW = "syncSupabase.yml";
+const SYNC_DEBOUNCE_MS = 45000; // no disparar más de 1 vez cada 45 s
+
+function ghToken() { return localStorage.getItem("gh_pat") || ""; }
+
+function pedirToken() {
+  const t = prompt(
+    "Sincronización instantánea (solo la primera vez):\n\n" +
+    "1. GitHub → tu foto → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.\n" +
+    "2. Repository access: Only select repositories → DAngelGelsoft.\n" +
+    "3. Permissions: Actions → Read and write → Generate token.\n" +
+    "4. Pega el token aquí (empieza con github_pat_). Se guarda SOLO en este navegador, nunca en el repo."
+  );
+  if (t && t.trim()) { localStorage.setItem("gh_pat", t.trim()); return t.trim(); }
+  return "";
+}
+
+function dispararSync() {
+  let token = ghToken() || pedirToken();
+  if (!token) return;
+  const ahora = Date.now();
+  if (ahora - (window._ultimoSync || 0) < SYNC_DEBOUNCE_MS) return;
+  window._ultimoSync = ahora;
+  aviso("Sincronizando la app…");
+  fetch("https://api.github.com/repos/" + GH_REPO + "/actions/workflows/" + GH_WORKFLOW + "/dispatches", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Accept": "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ref: "main" }),
+  }).then(r => {
+    if (r.status === 401 || r.status === 403) {
+      localStorage.removeItem("gh_pat");
+      aviso("Token de GitHub inválido o sin permiso. Se pedirá de nuevo al guardar.");
+    } else if (!r.ok) {
+      aviso("No se pudo disparar la sincronización (HTTP " + r.status + ").");
+    }
+    /* 204 = disparado. El JSON tarda ~1-2 min (workflow + Pages). */
+  }).catch(() => aviso("Sin conexión con GitHub para sincronizar."));
+}
+
+function cambiarToken() {
+  localStorage.removeItem("gh_pat");
+  if (pedirToken()) aviso("Token actualizado ✓");
+}
   // El JSON que lee la app (GitHub Pages, modelo Aguacero). Si el panel
   // se abre desde su propia URL en Pages, se deriva solo.
   const JSON_URL = (location.protocol.startsWith("http"))
@@ -267,6 +318,7 @@
     let data = null;
     try { data = text ? JSON.parse(text) : null; } catch (e) {}
     if (!res.ok) throw new Error((data && data.message) || ("HTTP " + res.status));
+    if (method !== "GET") dispararSync(); // cambio instantáneo, sin esperar al timer
     return data;
   }
 
