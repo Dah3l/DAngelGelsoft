@@ -266,6 +266,12 @@
 
   const SIN_LLAVES = SUPABASE_URL.includes("TU-PROYECTO") || SUPABASE_ANON_KEY.includes("TU-ANON");
 
+  // Siguiente valor de `orden` para una tabla (los nuevos van al final).
+  async function siguienteOrden(tabla) {
+    const rows = await sb("GET", "/" + tabla + "?select=orden&order=orden.desc&limit=1");
+    return ((rows[0] && rows[0].orden) || 0) + 1;
+  }
+
   // ---------- Navegación por pills ----------
   document.getElementById("pills").addEventListener("click", (e) => {
     const btn = e.target.closest("button");
@@ -469,7 +475,7 @@
       if (editando.seccion === "hor" && editando.id) {
         await sb("PATCH", "/schedules?id=eq." + editando.id, fila);
       } else {
-        await sb("POST", "/schedules", { ...fila, orden: Date.now() });
+        await sb("POST", "/schedules", { ...fila, orden: await siguienteOrden("schedules") });
       }
       aviso("Horario guardado ✓");
       cancelarEdicion("hor"); cargarListas();
@@ -488,7 +494,7 @@
       if (editando.seccion === "pre" && editando.id) {
         await sb("PATCH", "/prices?id=eq." + editando.id, fila);
       } else {
-        await sb("POST", "/prices", { ...fila, orden: Date.now() });
+        await sb("POST", "/prices", { ...fila, orden: await siguienteOrden("prices") });
       }
       aviso("Precio guardado ✓");
       cancelarEdicion("pre"); cargarListas();
@@ -506,7 +512,7 @@
       if (editando.seccion === "anu" && editando.id) {
         await sb("PATCH", "/announcements?id=eq." + editando.id, fila);
       } else {
-        await sb("POST", "/announcements", { ...fila, activo: true, orden: Date.now() });
+        await sb("POST", "/announcements", { ...fila, activo: true, orden: await siguienteOrden("announcements") });
       }
       aviso("Aviso guardado ✓");
       cancelarEdicion("anu"); cargarListas();
@@ -576,7 +582,7 @@
     const nombre = document.getElementById("sec-nombre").value.trim();
     if (!nombre) return aviso("Escribe el nombre de la sección.");
     try {
-      await sb("POST", "/gallery_sections", { nombre, orden: Date.now() });
+      await sb("POST", "/gallery_sections", { nombre, orden: await siguienteOrden("gallery_sections") });
       document.getElementById("sec-nombre").value = "";
       document.getElementById("form-sec").hidden = true;
       aviso("Sección agregada ✓");
@@ -654,7 +660,7 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       const url = SUPABASE_URL + "/storage/v1/object/public/galeria/" + nombre;
       await sb("POST", "/gallery_photos", {
-        section_id: seccionActiva.id, url, titulo: file.name, orden: Date.now(),
+        section_id: seccionActiva.id, url, titulo: file.name, orden: await siguienteOrden("gallery_photos"),
       });
       aviso("Foto subida ✓");
       cargarGaleria();
@@ -724,7 +730,7 @@
       if (editandoBloque) {
         await sb("PATCH", "/bloques?id=eq." + editandoBloque, fila);
       } else {
-        await sb("POST", "/bloques", { ...fila, orden: Date.now() });
+        await sb("POST", "/bloques", { ...fila, orden: await siguienteOrden("bloques") });
       }
       aviso("Bloque guardado ✓");
       cancelarEdicion("blq");
