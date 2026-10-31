@@ -8,7 +8,8 @@
     "telefono_reserva_1": "+53 54753951",
     "telefono_reserva_2": "+53 58878734",
     "sitio_web": "",
-    "correo": ""
+    "correo": "",
+    "adelanto_pct": 50
   },
   "horarios": [
     {
@@ -112,42 +113,48 @@
       "nombre": "Mañana Sesión 1",
       "hora_inicio": "10:00 AM",
       "hora_fin": "11:00 AM",
-      "dias": "1,2,3,4,5,6"
+      "dias": "1,2,3,4,5,6",
+      "precio": 500.0
     },
     {
       "id": 4,
       "nombre": "Mañana Sesión 2",
       "hora_inicio": "11:00 AM",
       "hora_fin": "12:00 PM",
-      "dias": "1,2,3,4,5,6,7"
+      "dias": "1,2,3,4,5,6,7",
+      "precio": 500.0
     },
     {
       "id": 2,
       "nombre": "Tarde Sesión 1",
       "hora_inicio": "2:00 PM",
       "hora_fin": "3:00 PM",
-      "dias": "1,2,3,4,5,6,7"
+      "dias": "1,2,3,4,5,6,7",
+      "precio": 500.0
     },
     {
       "id": 5,
       "nombre": "Tarde Sesión 2",
       "hora_inicio": "3:00 PM",
       "hora_fin": "4:00 PM",
-      "dias": "1,2,3,4,5,6,7"
+      "dias": "1,2,3,4,5,6,7",
+      "precio": 500.0
     },
     {
       "id": 3,
       "nombre": "Noche Sesión 1",
       "hora_inicio": "8:00 PM",
       "hora_fin": "9:00 PM",
-      "dias": "5,6"
+      "dias": "5,6",
+      "precio": 800.0
     },
     {
       "id": 6,
       "nombre": "Noche Sesión 2",
       "hora_inicio": "9:00 PM",
       "hora_fin": "10:00 PM",
-      "dias": "5,6"
+      "dias": "5,6",
+      "precio": 800.0
     }
   ],
   "nota_demo": "PRECIOS Y MODALIDADES DE PRUEBA. El administrador los cambia en el panel web."
