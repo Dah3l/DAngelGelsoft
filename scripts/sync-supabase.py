@@ -45,6 +45,7 @@ config = {
         "telefono_reserva_2": info.get("telefono_reserva_2") or "",
         "sitio_web": info.get("sitio_web") or "",
         "correo": info.get("correo") or "",
+        "adelanto_pct": info.get("adelanto_pct") if info.get("adelanto_pct") is not None else 50,
     },
     "horarios": [
         {
@@ -96,6 +97,7 @@ config = {
             "hora_inicio": b.get("hora_inicio") or "",
             "hora_fin": b.get("hora_fin") or "",
             "dias": b.get("dias") or "1,2,3,4,5,6",
+            "precio": float(b.get("precio") or 0),
         }
         for b in bloques
     ],
