@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel — D'Angel Gelsoft</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root { --teal: #00d1c1; --bg: #000; --card: #141414; --line: #2a2a2a; --muted: #bbb; }
   * { box-sizing: border-box; }
@@ -173,7 +172,26 @@
     ? new URL("app-config.json", location.href).href
     : "https://dah3l.github.io/DAngelGelsoft/app-config.json";
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ---------- Cliente REST directo (sin CDN ni dependencias) ----------
+  async function sb(method, path, body) {
+    const res = await fetch(SUPABASE_URL + "/rest/v1" + path, {
+      method,
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation,resolution=merge-duplicates",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) {}
+    if (!res.ok) throw new Error((data && data.message) || ("HTTP " + res.status));
+    return data;
+  }
+
+  const SIN_LLAVES = SUPABASE_URL.includes("TU-PROYECTO") || SUPABASE_ANON_KEY.includes("TU-ANON");
 
   // ---------- Navegación por pills ----------
   document.getElementById("pills").addEventListener("click", (e) => {
@@ -199,9 +217,9 @@
 
   // ---------------- Información del negocio ----------------
   async function cargarInfo() {
-    const { data, error } = await supabase
-      .from("business_info").select("*").eq("id", 1).maybeSingle();
-    if (error || !data) return;
+    const rows = await sb("GET", "/business_info?select=*&id=eq.1");
+    const data = rows[0];
+    if (!data) return;
     document.getElementById("info-nombre").value = data.nombre || "";
     document.getElementById("info-eslogan").value = data.eslogan || "";
     document.getElementById("info-descripcion").value = data.descripcion || "";
@@ -222,22 +240,28 @@
       telefono_reserva_1: document.getElementById("info-tel1").value.trim(),
       telefono_reserva_2: document.getElementById("info-tel2").value.trim(),
     };
-    const { error } = await supabase.from("business_info").upsert(fila);
-    aviso(error ? "Error al guardar: " + error.message : "Información guardada ✓");
+    try {
+      await sb("POST", "/business_info?onConflict=id", fila);
+      aviso("Información guardada ✓");
+    } catch (e) { aviso("Error al guardar: " + e.message); }
   }
 
   // ---------------- Listas: cargar + pintar ----------------
   let editando = { seccion: null, id: null };
 
   async function cargarListas() {
-    const [hor, pre, anu] = await Promise.all([
-      supabase.from("schedules").select("*").order("orden"),
-      supabase.from("prices").select("*").order("orden"),
-      supabase.from("announcements").select("*").order("orden"),
-    ]);
-    pintarHorarios(hor.data || []);
-    pintarPrecios(pre.data || []);
-    pintarAvisos(anu.data || []);
+    try {
+      const [hor, pre, anu] = await Promise.all([
+        sb("GET", "/schedules?select=*&order=orden.asc"),
+        sb("GET", "/prices?select=*&order=orden.asc"),
+        sb("GET", "/announcements?select=*&order=orden.asc"),
+      ]);
+      pintarHorarios(hor || []);
+      pintarPrecios(pre || []);
+      pintarAvisos(anu || []);
+    } catch (e) {
+      aviso("No se pudo cargar: " + e.message);
+    }
   }
 
   function acciones(tabla, sec, id) {
@@ -311,8 +335,12 @@
 
   async function empezarEdicion(sec, id) {
     const tablas = { hor: "schedules", pre: "prices", anu: "announcements" };
-    const { data, error } = await supabase.from(tablas[sec]).select("*").eq("id", id).maybeSingle();
-    if (error || !data) return aviso("No se pudo cargar el registro.");
+    let data;
+    try {
+      const rows = await sb("GET", "/" + tablas[sec] + "?select=*&id=eq." + id);
+      data = rows[0];
+    } catch (e) { data = null; }
+    if (!data) return aviso("No se pudo cargar el registro.");
     if (sec === "hor") {
       document.getElementById("hor-titulo").value = data.titulo || "";
       document.getElementById("hor-dias").value = data.dias || "";
@@ -346,14 +374,15 @@
       nota: document.getElementById("hor-nota").value.trim(),
     };
     if (!fila.titulo) return aviso("Escribe al menos el título.");
-    let error;
-    if (editando.seccion === "hor" && editando.id) {
-      ({ error } = await supabase.from("schedules").update(fila).eq("id", editando.id));
-    } else {
-      ({ error } = await supabase.from("schedules").insert({ ...fila, orden: Date.now() }));
-    }
-    aviso(error ? "Error: " + error.message : "Horario guardado ✓");
-    if (!error) { cancelarEdicion("hor"); cargarListas(); }
+    try {
+      if (editando.seccion === "hor" && editando.id) {
+        await sb("PATCH", "/schedules?id=eq." + editando.id, fila);
+      } else {
+        await sb("POST", "/schedules", { ...fila, orden: Date.now() });
+      }
+      aviso("Horario guardado ✓");
+      cancelarEdicion("hor"); cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
   async function guardarPrecio() {
@@ -364,14 +393,15 @@
       unidad: document.getElementById("pre-unidad").value.trim() || "por persona",
     };
     if (!fila.nombre) return aviso("Escribe al menos la modalidad.");
-    let error;
-    if (editando.seccion === "pre" && editando.id) {
-      ({ error } = await supabase.from("prices").update(fila).eq("id", editando.id));
-    } else {
-      ({ error } = await supabase.from("prices").insert({ ...fila, orden: Date.now() }));
-    }
-    aviso(error ? "Error: " + error.message : "Precio guardado ✓");
-    if (!error) { cancelarEdicion("pre"); cargarListas(); }
+    try {
+      if (editando.seccion === "pre" && editando.id) {
+        await sb("PATCH", "/prices?id=eq." + editando.id, fila);
+      } else {
+        await sb("POST", "/prices", { ...fila, orden: Date.now() });
+      }
+      aviso("Precio guardado ✓");
+      cancelarEdicion("pre"); cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
   async function guardarAviso() {
@@ -381,39 +411,45 @@
       fecha: document.getElementById("anu-fecha").value.trim(),
     };
     if (!fila.titulo) return aviso("Escribe al menos el título.");
-    let error;
-    if (editando.seccion === "anu" && editando.id) {
-      ({ error } = await supabase.from("announcements").update(fila).eq("id", editando.id));
-    } else {
-      ({ error } = await supabase.from("announcements").insert({ ...fila, activo: true, orden: Date.now() }));
-    }
-    aviso(error ? "Error: " + error.message : "Aviso guardado ✓");
-    if (!error) { cancelarEdicion("anu"); cargarListas(); }
+    try {
+      if (editando.seccion === "anu" && editando.id) {
+        await sb("PATCH", "/announcements?id=eq." + editando.id, fila);
+      } else {
+        await sb("POST", "/announcements", { ...fila, activo: true, orden: Date.now() });
+      }
+      aviso("Aviso guardado ✓");
+      cancelarEdicion("anu"); cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
   // ---------------- Borrar / mover / toggle ----------------
   async function borrar(tabla, id) {
     if (!confirm("¿Borrar este registro?")) return;
-    const { error } = await supabase.from(tabla).delete().eq("id", id);
-    aviso(error ? "Error: " + error.message : "Borrado ✓");
+    try {
+      await sb("DELETE", "/" + tabla + "?id=eq." + id);
+      aviso("Borrado ✓");
+    } catch (e) { aviso("Error: " + e.message); }
     cargarListas();
   }
 
   async function mover(tabla, id, dir) {
-    const { data, error } = await supabase.from(tabla).select("id,orden").order("orden");
-    if (error || !data) return;
-    const i = data.findIndex(r => r.id === id);
-    const j = i + dir;
-    if (i < 0 || j < 0 || j >= data.length) return;
-    const a = data[i], b = data[j];
-    await supabase.from(tabla).update({ orden: b.orden }).eq("id", a.id);
-    await supabase.from(tabla).update({ orden: a.orden }).eq("id", b.id);
-    cargarListas();
+    try {
+      const data = await sb("GET", "/" + tabla + "?select=id,orden&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      const a = data[i], b = data[j];
+      await sb("PATCH", "/" + tabla + "?id=eq." + a.id, { orden: b.orden });
+      await sb("PATCH", "/" + tabla + "?id=eq." + b.id, { orden: a.orden });
+      cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
   async function toggleAviso(id, activo) {
-    const { error } = await supabase.from("announcements").update({ activo }).eq("id", id);
-    aviso(error ? "Error: " + error.message : (activo ? "Aviso visible ✓" : "Aviso oculto ✓"));
+    try {
+      await sb("PATCH", "/announcements?id=eq." + id, { activo });
+      aviso(activo ? "Aviso visible ✓" : "Aviso oculto ✓");
+    } catch (e) { aviso("Error: " + e.message); }
     cargarListas();
   }
 
@@ -431,8 +467,14 @@
   }
 
   // Arranque.
-  cargarInfo();
-  cargarListas();
+  (async () => {
+    if (SIN_LLAVES) {
+      aviso("Falta configurar: edita este archivo y pon la URL y la anon key de Supabase.");
+      return;
+    }
+    try { await cargarInfo(); } catch (e) { aviso("No se pudo cargar la info: " + e.message); }
+    await cargarListas();
+  })();
 </script>
 </body>
 </html>
