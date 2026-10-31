@@ -38,7 +38,8 @@
     "telefono_reserva_2": "+53 58878734",
     "ubicacion": "Acuario Nacional, La Habana",
     "sitio_web": "",
-    "correo": ""
+    "correo": "",
+    "adelanto_pct": 50
   },
   "nota_demo": "PRECIOS Y MODALIDADES DE PRUEBA. Estos valores son ejemplos para la demo: el administrador los cambia el mismo en el panel web y la app los muestra al instante. No son los precios reales del negocio.",
   "precios": [
@@ -68,21 +69,24 @@
       "nombre": "Mañana",
       "hora_inicio": "10:00 AM",
       "hora_fin": "1:00 PM",
-      "dias": "1,2,3,4,5,6"
+      "dias": "1,2,3,4,5,6",
+      "precio": 500
     },
     {
       "id": 2,
       "nombre": "Tarde",
       "hora_inicio": "2:00 PM",
       "hora_fin": "5:00 PM",
-      "dias": "1,2,3,4,5,6"
+      "dias": "1,2,3,4,5,6",
+      "precio": 500
     },
     {
       "id": 3,
       "nombre": "Noche",
       "hora_inicio": "8:00 PM",
       "hora_fin": "10:00 PM",
-      "dias": "5,6"
+      "dias": "5,6",
+      "precio": 800
     }
   ]
 }
