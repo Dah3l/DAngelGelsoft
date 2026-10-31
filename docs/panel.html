@@ -260,15 +260,23 @@ function pedirToken() {
     "1. GitHub → tu foto → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.\n" +
     "2. Repository access: Only select repositories → DAngelGelsoft.\n" +
     "3. Permissions: Actions → Read and write → Generate token.\n" +
-    "4. Pega el token aquí (empieza con github_pat_). Se guarda SOLO en este navegador, nunca en el repo."
+    "4. Pega el token aquí (empieza con github_pat_). Se guarda SOLO en este navegador, nunca en el repo.\n\n" +
+    "Si prefieres no usarlo, cancela: se usará el método tradicional (sincronización programada/manual)."
   );
   if (t && t.trim()) { localStorage.setItem("gh_pat", t.trim()); return t.trim(); }
   return "";
 }
 
 function dispararSync() {
-  let token = ghToken() || pedirToken();
-  if (!token) return;
+  let token = ghToken();
+  if (!token) {
+    if (localStorage.getItem("gh_pat_skip") === "1") return; // prefirió el método tradicional
+    token = pedirToken();
+    if (!token) {
+      localStorage.setItem("gh_pat_skip", "1"); // no volver a preguntar
+      return;
+    }
+  }
   const ahora = Date.now();
   if (ahora - (window._ultimoSync || 0) < SYNC_DEBOUNCE_MS) return;
   window._ultimoSync = ahora;
@@ -294,6 +302,7 @@ function dispararSync() {
 
 function cambiarToken() {
   localStorage.removeItem("gh_pat");
+  localStorage.removeItem("gh_pat_skip");
   if (pedirToken()) aviso("Token actualizado ✓");
 }
   // El JSON que lee la app (GitHub Pages, modelo Aguacero). Si el panel
