@@ -27,3 +27,5 @@ jobs:
           git add docs/app-config.json
           git diff --staged --quiet || git commit -m "Sync app-config.json desde Supabase"
           git push
+
+          
