@@ -14,6 +14,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -21,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,15 +42,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dangel.gelsoft.data.AppConfig
 import com.dangel.gelsoft.data.BlockItem
+import com.dangel.gelsoft.data.ProfileStore
 import com.dangel.gelsoft.data.SupabaseDirect
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
+/** Formats a CUP amount without decimals when it's a whole number. */
+private fun formatCup(value: Double): String {
+    val int = value.toInt()
+    return if (value == int.toDouble()) "$int CUP" else "%.2f CUP".format(value)
+}
+
 /**
- * Reservation v2: pick a date → choose a free block → fill the form.
- * The reservation is saved as "pendiente"; the admin accepts it in the
- * web panel. The DB unique index is the final guard against double booking.
+ * Reservation v3: pick a date → choose a free block → fill the form
+ * (name/phone prefilled from the profile) → see the price breakdown
+ * (total + advance %) → send. On success the admin's WhatsApp chat opens
+ * automatically with the prefilled message. The DB unique index is the
+ * final guard against double booking.
  */
 @Composable
 fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: () -> Unit) {
@@ -59,17 +71,19 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
     var taken by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var loadingSlots by remember { mutableStateOf(false) }
 
-    var nombre by remember { mutableStateOf("") }
-    var telefono by remember { mutableStateOf("") }
+    var nombre by remember { mutableStateOf(ProfileStore.getNombre(context)) }
+    var telefono by remember { mutableStateOf(ProfileStore.getTelefono(context)) }
     var personas by remember { mutableIntStateOf(1) }
 
     var sending by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<SupabaseDirect.InsertResult?>(null) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
+    var waFailed by remember { mutableStateOf(false) }
 
     val fechaStr = fecha.format(DateTimeFormatter.ISO_LOCAL_DATE)
     val dayOfWeek = fecha.dayOfWeek.value // 1=Mon … 7=Sun
     val availableBlocks = config.blocks.filter { it.appliesTo(dayOfWeek) }
+    val adelantoPct = config.info.adelantoPct
 
     fun reloadSlots() {
         loadingSlots = true
@@ -82,9 +96,25 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
 
     LaunchedEffect(fechaStr) { reloadSlots() }
 
-    // ---------- Success view ----------
+    // ---------- Success view (WhatsApp opens automatically) ----------
     if (result is SupabaseDirect.InsertResult.Ok && bloque != null) {
         val b = bloque!!
+        val total = b.price * personas
+        val adelanto = total * adelantoPct / 100.0
+        val waMsg = "¡Hola! Soy $nombre, acabo de solicitar una reserva en D'Angel Gelsoft:\n" +
+            "$fechaStr · Bloque ${b.name} (${b.startTime} – ${b.endTime})\n" +
+            "$personas persona(s) × ${formatCup(b.price)} = ${formatCup(total)}\n" +
+            "Adelanto ($adelantoPct%): ${formatCup(adelanto)}\n" +
+            "Mi teléfono: $telefono\n" +
+            "Revísala aquí: ${SupabaseDirect.PANEL_RESERVAS_URL}"
+        LaunchedEffect(result) {
+            waFailed = false
+            try {
+                openWhatsApp(context, config.info.phone1, waMsg)
+            } catch (e: Exception) {
+                waFailed = true
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,29 +135,31 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                 fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "Total: ${formatCup(total)} · Adelanto ($adelantoPct%): ${formatCup(adelanto)}",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "El administrador la revisará. Toca el botón para avisarle por WhatsApp y agilizar la confirmación.",
+                "Se abrió WhatsApp con el mensaje listo: solo toca enviar para avisar al administrador.",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(
-                onClick = {
-                    val msg = "¡Hola! Soy $nombre, acabo de solicitar una reserva en D'Angel Gelsoft: " +
-                        "$fechaStr, bloque ${b.name} (${b.startTime}-${b.endTime}), $personas persona(s). " +
-                        "Mi teléfono: $telefono. Revísala aquí: ${SupabaseDirect.PANEL_RESERVAS_URL}"
-                    openWhatsApp(context, config.info.phone1, msg)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.Black,
-                ),
-            ) {
-                Text("Avisar al administrador por WhatsApp", fontWeight = FontWeight.Bold)
+            if (waFailed) {
+                Spacer(modifier = Modifier.height(12.dp))
+                TextButton(onClick = {
+                    try {
+                        openWhatsApp(context, config.info.phone1, waMsg)
+                        waFailed = false
+                    } catch (e: Exception) { /* keep showing */ }
+                }) {
+                    Text("Abrir WhatsApp de nuevo", color = MaterialTheme.colorScheme.primary)
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                 Text("Volver")
             }
@@ -189,7 +221,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                     enabled = !isTaken,
                     label = {
                         Text(
-                            "${b.name}: ${b.startTime} – ${b.endTime}" +
+                            "${b.name}: ${b.startTime} – ${b.endTime} · ${formatCup(b.price)}/persona" +
                                 if (isTaken) " (ocupado)" else ""
                         )
                     },
@@ -230,6 +262,41 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             OutlinedButton(onClick = { if (personas > 1) personas-- }) { Text("−") }
             Text(" $personas ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             OutlinedButton(onClick = { if (personas < 50) personas++ }) { Text("+") }
+        }
+
+        // ---------- Precio ----------
+        if (bloque != null) {
+            val b = bloque!!
+            val total = b.price * personas
+            val adelanto = total * adelantoPct / 100.0
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("4. Precio", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    PriceRow("Bloque", "${b.name} (${b.startTime} – ${b.endTime})")
+                    PriceRow("Personas", "$personas × ${formatCup(b.price)}")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    PriceRow("Total", formatCup(total), bold = true)
+                    PriceRow(
+                        "Adelanto ($adelantoPct%)",
+                        formatCup(adelanto),
+                        bold = true,
+                        highlight = true,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "El adelanto se paga por adelantado para confirmar la reserva.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
 
         errorMsg?.let {
@@ -280,12 +347,39 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             Text("Cancelar")
         }
         Spacer(modifier = Modifier.height(4.dp))
-        androidx.compose.material3.TextButton(
+        TextButton(
             onClick = onMyReservations,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Ver mis reservas", color = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun PriceRow(
+    label: String,
+    value: String,
+    bold: Boolean = false,
+    highlight: Boolean = false,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            label,
+            fontSize = 14.sp,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            value,
+            fontSize = 14.sp,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+            color = if (highlight) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
