@@ -42,7 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dangel.gelsoft.data.AppConfig
 import com.dangel.gelsoft.data.BlockItem
+import com.dangel.gelsoft.data.LocalReservation
 import com.dangel.gelsoft.data.ProfileStore
+import com.dangel.gelsoft.data.ReservationStore
 import com.dangel.gelsoft.data.SupabaseDirect
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -109,6 +111,20 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             "Revísala aquí: ${SupabaseDirect.PANEL_RESERVAS_URL}"
         LaunchedEffect(result) {
             waFailed = false
+            // Save on-device: "Mis reservas" reads local first.
+            ReservationStore.add(
+                context,
+                LocalReservation(
+                    fecha = fechaStr,
+                    bloqueId = b.id,
+                    bloqueNombre = b.name,
+                    nombre = nombre.trim(),
+                    telefono = telefono.trim(),
+                    personas = personas,
+                    total = total,
+                    creadoEn = System.currentTimeMillis(),
+                )
+            )
             try {
                 openWhatsApp(context, config.info.phone1, waMsg)
             } catch (e: Exception) {
