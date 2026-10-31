@@ -17,6 +17,8 @@ data class BusinessInfo(
     val instagram: String,
     val phone1: String,
     val phone2: String,
+    val website: String,
+    val email: String,
 )
 
 data class ScheduleItem(
@@ -35,16 +37,43 @@ data class PriceItem(
 )
 
 data class AnnouncementItem(
+    val id: Long,
     val title: String,
     val body: String,
     val dateLabel: String,
 )
+
+data class GalleryPhoto(
+    val id: Long,
+    val url: String,
+    val title: String,
+)
+
+data class GallerySection(
+    val id: Long,
+    val name: String,
+    val photos: List<GalleryPhoto>,
+)
+
+data class BlockItem(
+    val id: Long,
+    val name: String,
+    val startTime: String,
+    val endTime: String,
+    /** Comma-separated day numbers: 1=Mon … 7=Sun (java.time DayOfWeek). */
+    val days: String,
+) {
+    fun appliesTo(dayOfWeek: Int): Boolean =
+        days.split(",").mapNotNull { it.trim().toIntOrNull() }.contains(dayOfWeek)
+}
 
 data class AppConfig(
     val info: BusinessInfo,
     val schedules: List<ScheduleItem>,
     val prices: List<PriceItem>,
     val announcements: List<AnnouncementItem>,
+    val gallery: List<GallerySection>,
+    val blocks: List<BlockItem>,
 )
 
 /** Parses the single JSON served by the Edge Function (or the fallback file). */
@@ -60,6 +89,8 @@ fun parseConfig(jsonText: String): AppConfig {
         instagram = infoJson.optString("instagram", "d_angel_gelsoft"),
         phone1 = infoJson.optString("telefono_reserva_1", "+53 54753951"),
         phone2 = infoJson.optString("telefono_reserva_2", "+53 58878734"),
+        website = infoJson.optString("sitio_web", ""),
+        email = infoJson.optString("correo", ""),
     )
 
     val schedules = mutableListOf<ScheduleItem>()
@@ -102,6 +133,7 @@ fun parseConfig(jsonText: String): AppConfig {
             val item = announcementsJson.optJSONObject(i) ?: continue
             announcements.add(
                 AnnouncementItem(
+                    id = item.optLong("id", 0),
                     title = item.optString("titulo", ""),
                     body = item.optString("texto", ""),
                     dateLabel = item.optString("fecha", ""),
@@ -110,5 +142,51 @@ fun parseConfig(jsonText: String): AppConfig {
         }
     }
 
-    return AppConfig(info, schedules, prices, announcements)
+    val gallery = mutableListOf<GallerySection>()
+    val galleryJson = root.optJSONArray("galeria")
+    if (galleryJson != null) {
+        for (i in 0 until galleryJson.length()) {
+            val sec = galleryJson.optJSONObject(i) ?: continue
+            val photosJson = sec.optJSONArray("fotos")
+            val photos = mutableListOf<GalleryPhoto>()
+            if (photosJson != null) {
+                for (j in 0 until photosJson.length()) {
+                    val ph = photosJson.optJSONObject(j) ?: continue
+                    photos.add(
+                        GalleryPhoto(
+                            id = ph.optLong("id", 0),
+                            url = ph.optString("url", ""),
+                            title = ph.optString("titulo", ""),
+                        )
+                    )
+                }
+            }
+            gallery.add(
+                GallerySection(
+                    id = sec.optLong("id", 0),
+                    name = sec.optString("nombre", ""),
+                    photos = photos,
+                )
+            )
+        }
+    }
+
+    val blocks = mutableListOf<BlockItem>()
+    val blocksJson = root.optJSONArray("bloques")
+    if (blocksJson != null) {
+        for (i in 0 until blocksJson.length()) {
+            val item = blocksJson.optJSONObject(i) ?: continue
+            blocks.add(
+                BlockItem(
+                    id = item.optLong("id", 0),
+                    name = item.optString("nombre", ""),
+                    startTime = item.optString("hora_inicio", ""),
+                    endTime = item.optString("hora_fin", ""),
+                    days = item.optString("dias", "1,2,3,4,5,6"),
+                )
+            )
+        }
+    }
+
+    return AppConfig(info, schedules, prices, announcements, gallery, blocks)
 }
