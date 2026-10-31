@@ -93,27 +93,39 @@ class MainActivity : ComponentActivity() {
 
                 // 1. Instant: cached content, never a spinner.
                 LaunchedEffect(Unit) {
+                    val prefs = context.getSharedPreferences("dangel_prefs", Context.MODE_PRIVATE)
+                    val initialized = prefs.getBoolean("avisos_init", false)
                     val cached = withContext(Dispatchers.IO) {
                         ConfigRepository.loadCached(context)
                     }
                     config = cached
-                    val seen = AnnouncementPrefs.seenIds(context)
-                    unread = cached.announcements.count { it.id !in seen && it.id != 0L }
+                    unread = if (initialized) {
+                        val seen = AnnouncementPrefs.seenIds(context)
+                        cached.announcements.count { it.id !in seen && it.id != 0L }
+                    } else 0
                     if (openAnnouncementsOnStart) overlay.value = "avisos"
 
                     // 2. Background refresh.
                     val fresh = ConfigRepository.refreshFromNetwork(context)
                     if (fresh != null) {
-                        val freshSeen = AnnouncementPrefs.seenIds(context)
-                        val newOnes = fresh.announcements.filter {
-                            it.id != 0L && it.id !in freshSeen
+                        if (!initialized) {
+                            // First run: mark everything as seen silently so
+                            // old announcements don't notify as "new".
+                            AnnouncementPrefs.markSeen(context, fresh.announcements.map { it.id })
+                            prefs.edit().putBoolean("avisos_init", true).apply()
+                            unread = 0
+                        } else {
+                            val freshSeen = AnnouncementPrefs.seenIds(context)
+                            val newOnes = fresh.announcements.filter {
+                                it.id != 0L && it.id !in freshSeen
+                            }
+                            unread = newOnes.size
+                            if (newOnes.isNotEmpty()) {
+                                AnnouncementNotifier.notifyNew(context, newOnes)
+                            }
                         }
                         config = fresh
                         offline = false
-                        unread = newOnes.size
-                        if (newOnes.isNotEmpty()) {
-                            AnnouncementNotifier.notifyNew(context, newOnes)
-                        }
                     } else {
                         offline = true
                     }
