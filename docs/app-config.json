@@ -28,7 +28,7 @@
     {
       "nombre": "Sesión de día",
       "descripcion": "Partida diurna en el campo, incluye equipo y protección.",
-      "precio_cup": 500,
+      "precio_cup": 999,
       "unidad": "por persona"
     },
     {
