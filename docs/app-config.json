@@ -6,7 +6,9 @@
     "ubicacion": "Acuario Nacional, La Habana",
     "instagram": "d_angel_gelsoft",
     "telefono_reserva_1": "+53 54753951",
-    "telefono_reserva_2": "+53 58878734"
+    "telefono_reserva_2": "+53 58878734",
+    "sitio_web": "",
+    "correo": ""
   },
   "horarios": [
     {
@@ -46,14 +48,56 @@
   ],
   "anuncios": [
     {
+      "id": 1,
       "titulo": "Noche especial de gelsoft",
       "texto": "Este viernes, sesión nocturna con escenarios iluminados. Reserva tu puesto por WhatsApp.",
       "fecha": "Viernes"
     },
     {
+      "id": 2,
       "titulo": "¡El primer campo de gelsoft en Cuba!",
       "texto": "Ven a conocer el campo en el Acuario Nacional. Trae a tu equipo: de día o de noche, la misión te espera.",
       "fecha": "Siempre"
+    }
+  ],
+  "galeria": [
+    {
+      "id": 1,
+      "nombre": "Armas",
+      "fotos": []
+    },
+    {
+      "id": 2,
+      "nombre": "Eventos",
+      "fotos": []
+    },
+    {
+      "id": 3,
+      "nombre": "Clientes",
+      "fotos": []
+    }
+  ],
+  "bloques": [
+    {
+      "id": 1,
+      "nombre": "Mañana",
+      "hora_inicio": "10:00 AM",
+      "hora_fin": "1:00 PM",
+      "dias": "1,2,3,4,5,6"
+    },
+    {
+      "id": 2,
+      "nombre": "Tarde",
+      "hora_inicio": "2:00 PM",
+      "hora_fin": "5:00 PM",
+      "dias": "1,2,3,4,5,6"
+    },
+    {
+      "id": 3,
+      "nombre": "Noche",
+      "hora_inicio": "8:00 PM",
+      "hora_fin": "10:00 PM",
+      "dias": "5,6"
     }
   ],
   "nota_demo": "PRECIOS Y MODALIDADES DE PRUEBA. El administrador los cambia en el panel web."
