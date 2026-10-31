@@ -2,7 +2,6 @@ package com.dangel.gelsoft.data
 
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -116,14 +115,21 @@ object SupabaseDirect {
         val nombre: String,
         val personas: Int,
         val estado: String,
+        val telefono: String,
     )
 
-    /** Reservations made with this phone number (digits only comparison). */
+    /**
+     * Reservations for this phone. Only the last 8 digits matter, so
+     * "+53 5xxxxxxx", "535xxxxxxx" and "5xxxxxxx" all match.
+     */
     suspend fun myReservations(telefono: String): List<MyReservation> = withContext(Dispatchers.IO) {
         try {
-            val digits = telefono.filter { it.isDigit() }
-            val q = "select=id,fecha,bloque_id,nombre,personas,estado&telefono=eq." +
-                URLEncoder.encode(telefono, "UTF-8") + "&order=fecha.desc"
+            val digits8 = telefono.filter { it.isDigit() }.takeLast(8)
+            if (digits8.length < 8) return@withContext emptyList()
+            // like.* matches any prefix (+53, spaces…): server-side prefilter.
+            val q = "select=id,fecha,bloque_id,nombre,personas,estado,telefono" +
+                "&telefono=like.*" + digits8 +
+                "&order=fecha.desc&limit=50"
             val con = URL("$URL_BASE/rest/v1/reservas?$q").openConnection() as HttpURLConnection
             con.requestMethod = "GET"
             con.connectTimeout = 8000
@@ -137,8 +143,8 @@ object SupabaseDirect {
             buildList {
                 for (i in 0 until arr.length()) {
                     val o = arr.optJSONObject(i) ?: continue
-                    // Match by digits so "+53 5..." equals "535...".
-                    if (o.optString("telefono").filter { c -> c.isDigit() } != digits) continue
+                    // Client-side: exact match on the last 8 digits.
+                    if (o.optString("telefono").filter { c -> c.isDigit() }.takeLast(8) != digits8) continue
                     add(
                         MyReservation(
                             id = o.optLong("id"),
@@ -147,6 +153,7 @@ object SupabaseDirect {
                             nombre = o.optString("nombre"),
                             personas = o.optInt("personas", 1),
                             estado = o.optString("estado"),
+                            telefono = o.optString("telefono"),
                         )
                     )
                 }
