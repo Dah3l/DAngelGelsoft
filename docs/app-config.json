@@ -58,44 +58,94 @@
       "titulo": "¡El primer campo de gelsoft en Cuba!",
       "texto": "Ven a conocer el campo en el Acuario Nacional. Trae a tu equipo: de día o de noche, la misión te espera.",
       "fecha": "Siempre"
+    },
+    {
+      "id": 3,
+      "titulo": "Noche de Halloween 🎃",
+      "texto": "Celebra Halloween aquí en D'Angel Gelsoft",
+      "fecha": "Domingo 31 de octubre."
     }
   ],
   "galeria": [
     {
-      "id": 1,
-      "nombre": "Armas",
-      "fotos": []
-    },
-    {
       "id": 2,
       "nombre": "Eventos",
-      "fotos": []
+      "fotos": [
+        {
+          "id": 1,
+          "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793467213761_1000513609.jpg",
+          "titulo": "1000513609.jpg"
+        },
+        {
+          "id": 2,
+          "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793467227087_1000513606.jpg",
+          "titulo": "1000513606.jpg"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "nombre": "Armas",
+      "fotos": [
+        {
+          "id": 4,
+          "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793467259756_1000513495.jpg",
+          "titulo": "1000513495.jpg"
+        }
+      ]
     },
     {
       "id": 3,
       "nombre": "Clientes",
-      "fotos": []
+      "fotos": [
+        {
+          "id": 5,
+          "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793467277028_1000513607.jpg",
+          "titulo": "1000513607.jpg"
+        }
+      ]
     }
   ],
   "bloques": [
     {
       "id": 1,
-      "nombre": "Mañana",
+      "nombre": "Mañana Sesión 1",
       "hora_inicio": "10:00 AM",
-      "hora_fin": "1:00 PM",
+      "hora_fin": "11:00 AM",
       "dias": "1,2,3,4,5,6"
+    },
+    {
+      "id": 4,
+      "nombre": "Mañana Sesión 2",
+      "hora_inicio": "11:00 AM",
+      "hora_fin": "12:00 PM",
+      "dias": "1,2,3,4,5,6,7"
     },
     {
       "id": 2,
-      "nombre": "Tarde",
+      "nombre": "Tarde Sesión 1",
       "hora_inicio": "2:00 PM",
-      "hora_fin": "5:00 PM",
-      "dias": "1,2,3,4,5,6"
+      "hora_fin": "3:00 PM",
+      "dias": "1,2,3,4,5,6,7"
+    },
+    {
+      "id": 5,
+      "nombre": "Tarde Sesión 2",
+      "hora_inicio": "3:00 PM",
+      "hora_fin": "4:00 PM",
+      "dias": "1,2,3,4,5,6,7"
     },
     {
       "id": 3,
-      "nombre": "Noche",
+      "nombre": "Noche Sesión 1",
       "hora_inicio": "8:00 PM",
+      "hora_fin": "9:00 PM",
+      "dias": "5,6"
+    },
+    {
+      "id": 6,
+      "nombre": "Noche Sesión 2",
+      "hora_inicio": "9:00 PM",
       "hora_fin": "10:00 PM",
       "dias": "5,6"
     }
