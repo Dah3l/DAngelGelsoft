@@ -12,20 +12,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,13 +39,15 @@ import androidx.core.content.ContextCompat
 import com.dangel.gelsoft.data.AnnouncementPrefs
 import com.dangel.gelsoft.data.AppConfig
 import com.dangel.gelsoft.data.ConfigRepository
+import com.dangel.gelsoft.data.ProfileStore
 import com.dangel.gelsoft.notifications.AnnouncementNotifier
+import com.dangel.gelsoft.ui.DangelBottomBar
 import com.dangel.gelsoft.ui.screens.AnnouncementsScreen
-import com.dangel.gelsoft.ui.screens.ContactScreen
 import com.dangel.gelsoft.ui.screens.GalleryScreen
 import com.dangel.gelsoft.ui.screens.HomeScreen
 import com.dangel.gelsoft.ui.screens.MyReservationsScreen
 import com.dangel.gelsoft.ui.screens.PricesScreen
+import com.dangel.gelsoft.ui.screens.ProfileScreen
 import com.dangel.gelsoft.ui.screens.ReservationScreen
 import com.dangel.gelsoft.ui.screens.SplashScreen
 import com.dangel.gelsoft.ui.theme.DangelTheme
@@ -61,12 +55,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * D'Angel Gelsoft: cover + prices + gallery + contact, with a floating
- * reservation button and a notification bell for announcements.
+ * D'Angel Gelsoft v3: tabs Inicio · Precios · Galería · Perfil with a
+ * raised center reservation button, bell for announcements in the top bar.
  *
  * Offline-first: the cached content shows instantly; the network refresh
  * happens in the background and swaps in silently. New announcements
- * trigger the bell badge and a system notification.
+ * trigger the bell badge and a system notification (unless the user
+ * disabled them in their profile).
  */
 class MainActivity : ComponentActivity() {
 
@@ -120,7 +115,7 @@ class MainActivity : ComponentActivity() {
                                 it.id != 0L && it.id !in freshSeen
                             }
                             unread = newOnes.size
-                            if (newOnes.isNotEmpty()) {
+                            if (newOnes.isNotEmpty() && ProfileStore.notifEnabled(context)) {
                                 AnnouncementNotifier.notifyNew(context, newOnes)
                             }
                         }
@@ -165,6 +160,13 @@ class MainActivity : ComponentActivity() {
                     offline = offline,
                     unread = unread,
                     onAvisosSeen = { unread = 0 },
+                    onRequestNotifPermission = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissions(
+                                arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1
+                            )
+                        }
+                    },
                 )
             }
         }
@@ -180,6 +182,7 @@ private fun DangelScaffold(
     offline: Boolean,
     unread: Int,
     onAvisosSeen: () -> Unit,
+    onRequestNotifPermission: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -210,35 +213,15 @@ private fun DangelScaffold(
                 },
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = goReserve,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.Black,
-            ) {
-                Text("Reservar", fontSize = 15.sp)
-            }
-        },
         bottomBar = {
-            NavigationBar {
-                val items = listOf(
-                    Triple("Inicio", Icons.Filled.Home, 0),
-                    Triple("Precios", Icons.Filled.AttachMoney, 1),
-                    Triple("Galería", Icons.Filled.PhotoLibrary, 2),
-                    Triple("Contacto", Icons.Filled.Person, 3),
-                )
-                for ((label, icon, index) in items) {
-                    NavigationBarItem(
-                        selected = tab.value == index && overlay.value == null,
-                        onClick = {
-                            tab.value = index
-                            overlay.value = null
-                        },
-                        icon = { Icon(icon, contentDescription = label) },
-                        label = { Text(label) },
-                    )
-                }
-            }
+            DangelBottomBar(
+                selectedTab = tab.value,
+                onTabSelected = {
+                    tab.value = it
+                    overlay.value = null
+                },
+                onReserve = goReserve,
+            )
         },
     ) { innerPadding ->
         Column(
@@ -269,15 +252,13 @@ private fun DangelScaffold(
                         0 -> HomeScreen(
                             config = current,
                             onReserve = goReserve,
-                            onSeePrices = { tab.value = 1 },
-                            onSeeAnnouncements = openAvisos,
                             onSeeGallery = { tab.value = 2 },
                         )
                         1 -> PricesScreen(current)
                         2 -> GalleryScreen(current)
-                        else -> ContactScreen(
-                            config = current,
+                        else -> ProfileScreen(
                             onMyReservations = { overlay.value = "mis_reservas" },
+                            onRequestNotifPermission = onRequestNotifPermission,
                         )
                     }
                 }
