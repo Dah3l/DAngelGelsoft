@@ -42,6 +42,14 @@
   .formbox h3 { margin: 0 0 6px; font-size: 16px; color: var(--teal); }
   .form-actions { display: flex; gap: 10px; }
   .empty { color: var(--muted); font-size: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 12px; }
+  .dias-check { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .dias-check label { display: inline-flex; align-items: center; gap: 5px; margin: 0; font-size: 14px; color: #fff; cursor: pointer; }
+  .dias-check input { width: auto; accent-color: var(--teal); }
+  .foto-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
+  .badge { display: inline-block; font-size: 12px; font-weight: bold; padding: 3px 10px; border-radius: 999px; }
+  .badge.pendiente { background: #3a2f00; color: #ffd60a; }
+  .badge.confirmada { background: #0b3d1b; color: #4ade80; }
+  .badge.rechazada { background: #3d0b0b; color: #ff7b7b; }
   #estado { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-weight: bold; padding: 10px 18px; border-radius: 999px; display: none; z-index: 20; max-width: 90%; text-align: center; }
   pre { background: #0d0d0d; border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
   .nota { color: var(--muted); font-size: 13px; }
@@ -59,6 +67,9 @@
   <button data-sec="horarios">Horarios</button>
   <button data-sec="precios">Precios</button>
   <button data-sec="avisos">Avisos</button>
+  <button data-sec="galeria">Galería</button>
+  <button data-sec="bloques">Bloques</button>
+  <button data-sec="reservas">Reservas</button>
   <button data-sec="json">JSON</button>
 </nav>
 
@@ -79,6 +90,10 @@
       <label>Descripción</label><textarea id="info-descripcion"></textarea>
       <label>Ubicación</label><input id="info-ubicacion">
       <label>Instagram (sin @)</label><input id="info-instagram">
+      <div class="row">
+        <div><label>Sitio web</label><input id="info-web" placeholder="https://..."></div>
+        <div><label>Correo</label><input id="info-correo" placeholder="contacto@..."></div>
+      </div>
       <div class="row">
         <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
         <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
@@ -146,6 +161,64 @@
         <button class="sec" onclick="cancelarEdicion('anu')">Cancelar</button>
       </div>
     </div>
+  </section>
+
+  <!-- ============ GALERÍA ============ -->
+  <section id="sec-galeria" hidden>
+    <h2>Galería</h2>
+    <p class="sec-desc">Secciones (Armas, Eventos, Clientes...) y sus fotos. Las fotos se suben al bucket y la app las muestra solas.</p>
+    <div id="lista-secciones"></div>
+    <button class="sec" onclick="toggleForm('sec')">+ Agregar sección</button>
+    <div class="formbox" id="form-sec" hidden>
+      <h3>Nueva sección</h3>
+      <label>Nombre</label><input id="sec-nombre" placeholder="Ej: Armas">
+      <div class="form-actions">
+        <button onclick="guardarSeccion()">Agregar</button>
+        <button class="sec" onclick="document.getElementById('form-sec').hidden=true">Cancelar</button>
+      </div>
+    </div>
+    <div id="fotos-seccion"></div>
+  </section>
+
+  <!-- ============ BLOQUES ============ -->
+  <section id="sec-bloques" hidden>
+    <h2>Bloques de reserva</h2>
+    <p class="sec-desc">Turnos de juego. Cada bloque define en qué días aplica; la app solo ofrece los libres.</p>
+    <div id="lista-bloques"></div>
+    <button class="sec" onclick="toggleForm('blq')">+ Agregar bloque</button>
+    <div class="formbox" id="form-blq" hidden>
+      <h3 id="form-blq-titulo">Nuevo bloque</h3>
+      <label>Nombre</label><input id="blq-nombre" placeholder="Ej: Mañana">
+      <div class="row">
+        <div><label>Hora inicio</label><input id="blq-inicio" placeholder="10:00 AM"></div>
+        <div><label>Hora fin</label><input id="blq-fin" placeholder="1:00 PM"></div>
+      </div>
+      <label>Días que aplica</label>
+      <div id="blq-dias" class="dias-check">
+        <label><input type="checkbox" value="1" checked> Lun</label>
+        <label><input type="checkbox" value="2" checked> Mar</label>
+        <label><input type="checkbox" value="3" checked> Mié</label>
+        <label><input type="checkbox" value="4" checked> Jue</label>
+        <label><input type="checkbox" value="5" checked> Vie</label>
+        <label><input type="checkbox" value="6" checked> Sáb</label>
+        <label><input type="checkbox" value="7"> Dom</label>
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-blq" onclick="guardarBloque()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('blq')">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESERVAS ============ -->
+  <section id="sec-reservas" hidden>
+    <h2>Reservas</h2>
+    <p class="sec-desc">Solicitudes de los clientes. Acepta o rechaza; al decidir, avisa al cliente por WhatsApp con un toque.</p>
+    <div class="row" style="margin-bottom:12px">
+      <button class="sec" id="filtro-pendientes" onclick="setFiltroReservas('pendiente')">Pendientes</button>
+      <button class="sec" id="filtro-todas" onclick="setFiltroReservas('todas')">Todas</button>
+    </div>
+    <div id="lista-reservas"></div>
   </section>
 
   <!-- ============ JSON ============ -->
@@ -225,6 +298,8 @@
     document.getElementById("info-descripcion").value = data.descripcion || "";
     document.getElementById("info-ubicacion").value = data.ubicacion || "";
     document.getElementById("info-instagram").value = data.instagram || "";
+    document.getElementById("info-web").value = data.sitio_web || "";
+    document.getElementById("info-correo").value = data.correo || "";
     document.getElementById("info-tel1").value = data.telefono_reserva_1 || "";
     document.getElementById("info-tel2").value = data.telefono_reserva_2 || "";
   }
@@ -237,6 +312,8 @@
       descripcion: document.getElementById("info-descripcion").value.trim(),
       ubicacion: document.getElementById("info-ubicacion").value.trim(),
       instagram: document.getElementById("info-instagram").value.trim(),
+      sitio_web: document.getElementById("info-web").value.trim(),
+      correo: document.getElementById("info-correo").value.trim(),
       telefono_reserva_1: document.getElementById("info-tel1").value.trim(),
       telefono_reserva_2: document.getElementById("info-tel2").value.trim(),
     };
@@ -311,7 +388,15 @@
   function toggleForm(sec) {
     const form = document.getElementById("form-" + sec);
     form.hidden = !form.hidden;
-    if (!form.hidden) editando = { seccion: null, id: null };
+    if (!form.hidden) {
+      editando = { seccion: null, id: null };
+      if (sec === "blq") {
+        editandoBloque = null;
+        limpiarForm("blq");
+        document.getElementById("form-blq-titulo").textContent = "Nuevo bloque";
+        document.getElementById("btn-save-blq").textContent = "Agregar";
+      }
+    }
   }
 
   function limpiarForm(sec) {
@@ -319,14 +404,20 @@
       hor: ["hor-titulo", "hor-dias", "hor-apertura", "hor-cierre", "hor-nota"],
       pre: ["pre-nombre", "pre-desc", "pre-precio", "pre-unidad"],
       anu: ["anu-titulo", "anu-texto", "anu-fecha"],
+      blq: ["blq-nombre", "blq-inicio", "blq-fin"],
     }[sec];
+    if (!ids) return;
     ids.forEach(id => document.getElementById(id).value = id === "pre-unidad" ? "por persona" : "");
+    if (sec === "blq") {
+      document.querySelectorAll("#blq-dias input").forEach(c => c.checked = c.value !== "7");
+    }
   }
 
   function cancelarEdicion(sec) {
     document.getElementById("form-" + sec).hidden = true;
     limpiarForm(sec);
     editando = { seccion: null, id: null };
+    if (sec === "blq") { editandoBloque = null; return; }
     const titulos = { hor: "Nuevo horario", pre: "Nuevo precio", anu: "Nuevo aviso" };
     const botones = { hor: "Agregar", pre: "Agregar", anu: "Agregar" };
     document.getElementById("form-" + sec + "-titulo").textContent = titulos[sec];
@@ -453,6 +544,281 @@
     cargarListas();
   }
 
+  // ---------------- Galería ----------------
+  let seccionActiva = null;
+
+  async function cargarGaleria() {
+    try {
+      const [secs, fotos] = await Promise.all([
+        sb("GET", "/gallery_sections?select=*&order=orden.asc"),
+        sb("GET", "/gallery_photos?select=*&order=orden.asc"),
+      ]);
+      const porSec = {};
+      (fotos || []).forEach(f => { (porSec[f.section_id] = porSec[f.section_id] || []).push(f); });
+      const el = document.getElementById("lista-secciones");
+      el.innerHTML = (secs || []).map(s => `
+        <div class="card"><div class="top">
+          <div><div class="title">${escapeHtml(s.nombre)}</div>
+          <div class="sub">${(porSec[s.id] || []).length} fotos</div></div>
+          <div class="actions">
+            <button class="icon" title="Ver fotos" onclick="verFotos(${s.id}, '${escapeHtml(s.nombre).replace(/'/g, "\\'")}')">🖼</button>
+            <button class="icon" title="Subir" onclick="moverSeccion(${s.id}, -1)">↑</button>
+            <button class="icon" title="Bajar" onclick="moverSeccion(${s.id}, 1)">↓</button>
+            <button class="danger" title="Borrar" onclick="borrarSeccion(${s.id})">🗑</button>
+          </div>
+        </div></div>`).join("")
+        || `<div class="empty">Sin secciones todavía.</div>`;
+      if (seccionActiva) verFotos(seccionActiva.id, seccionActiva.nombre, porSec);
+    } catch (e) { aviso("No se pudo cargar la galería: " + e.message); }
+  }
+
+  async function guardarSeccion() {
+    const nombre = document.getElementById("sec-nombre").value.trim();
+    if (!nombre) return aviso("Escribe el nombre de la sección.");
+    try {
+      await sb("POST", "/gallery_sections", { nombre, orden: Date.now() });
+      document.getElementById("sec-nombre").value = "";
+      document.getElementById("form-sec").hidden = true;
+      aviso("Sección agregada ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function borrarSeccion(id) {
+    if (!confirm("¿Borrar la sección y todas sus fotos?")) return;
+    try {
+      await sb("DELETE", "/gallery_sections?id=eq." + id);
+      if (seccionActiva && seccionActiva.id === id) {
+        seccionActiva = null;
+        document.getElementById("fotos-seccion").innerHTML = "";
+      }
+      aviso("Sección borrada ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function moverSeccion(id, dir) {
+    try {
+      const data = await sb("GET", "/gallery_sections?select=id,orden&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      await sb("PATCH", "/gallery_sections?id=eq." + data[i].id, { orden: data[j].orden });
+      await sb("PATCH", "/gallery_sections?id=eq." + data[j].id, { orden: data[i].orden });
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function verFotos(sectionId, nombre, porSec) {
+    seccionActiva = { id: sectionId, nombre };
+    let fotos = porSec;
+    if (!fotos) {
+      try {
+        fotos = await sb("GET", "/gallery_photos?select=*&section_id=eq." + sectionId + "&order=orden.asc");
+      } catch (e) { return aviso("Error: " + e.message); }
+    } else {
+      fotos = (fotos[sectionId] || []);
+    }
+    const el = document.getElementById("fotos-seccion");
+    el.innerHTML = `<h3 style="margin:16px 0 8px">Fotos — ${escapeHtml(nombre)}</h3>` +
+      `<label class="toggle" style="margin-bottom:12px">📤 Subir foto: <input type="file" id="input-foto" accept="image/*" onchange="subirFoto(this)"></label>` +
+      (fotos.map(f => `
+        <div class="card"><div class="top">
+          <img class="foto-thumb" src="${escapeHtml(f.url)}" alt="">
+          <div style="flex:1"><div class="sub">${escapeHtml(f.titulo || "Sin título")}</div></div>
+          <div class="actions">
+            <button class="icon" title="Subir" onclick="moverFoto(${f.id}, -1)">↑</button>
+            <button class="icon" title="Bajar" onclick="moverFoto(${f.id}, 1)">↓</button>
+            <button class="danger" title="Borrar" onclick="borrarFoto(${f.id})">🗑</button>
+          </div>
+        </div></div>`).join("")
+      || `<div class="empty">Sin fotos en esta sección.</div>`);
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function subirFoto(input) {
+    const file = input.files[0];
+    if (!file || !seccionActiva) return;
+    aviso("Subiendo foto…");
+    try {
+      const nombre = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+      const res = await fetch(SUPABASE_URL + "/storage/v1/object/galeria/" + nombre, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+          "Content-Type": file.type || "image/jpeg",
+        },
+        body: file,
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const url = SUPABASE_URL + "/storage/v1/object/public/galeria/" + nombre;
+      await sb("POST", "/gallery_photos", {
+        section_id: seccionActiva.id, url, titulo: file.name, orden: Date.now(),
+      });
+      aviso("Foto subida ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error al subir: " + e.message); }
+  }
+
+  async function borrarFoto(id) {
+    if (!confirm("¿Borrar esta foto?")) return;
+    try {
+      await sb("DELETE", "/gallery_photos?id=eq." + id);
+      aviso("Foto borrada ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function moverFoto(id, dir) {
+    try {
+      const data = await sb("GET", "/gallery_photos?select=id,orden&section_id=eq." + seccionActiva.id + "&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      await sb("PATCH", "/gallery_photos?id=eq." + data[i].id, { orden: data[j].orden });
+      await sb("PATCH", "/gallery_photos?id=eq." + data[j].id, { orden: data[i].orden });
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  // ---------------- Bloques de reserva ----------------
+  const DIAS_NOMBRE = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 7: "Dom" };
+  let editandoBloque = null;
+
+  function diasTexto(dias) {
+    return String(dias || "").split(",").map(d => DIAS_NOMBRE[d.trim()] || d.trim()).join(" ");
+  }
+
+  async function cargarBloques() {
+    try {
+      const data = await sb("GET", "/bloques?select=*&order=orden.asc");
+      document.getElementById("lista-bloques").innerHTML = (data || []).map(b => `
+        <div class="card"><div class="top">
+          <div><div class="title">${escapeHtml(b.nombre)}</div>
+          <div class="sub">${escapeHtml(b.hora_inicio)} – ${escapeHtml(b.hora_fin)} · ${diasTexto(b.dias)}</div></div>
+          <div class="actions">
+            <button class="icon" title="Editar" onclick="empezarEdicionBloque(${b.id})">✏️</button>
+            <button class="icon" title="Subir" onclick="moverBloque(${b.id}, -1)">↑</button>
+            <button class="icon" title="Bajar" onclick="moverBloque(${b.id}, 1)">↓</button>
+            <button class="danger" title="Borrar" onclick="borrarBloque(${b.id})">🗑</button>
+          </div>
+        </div></div>`).join("")
+        || `<div class="empty">Sin bloques todavía.</div>`;
+    } catch (e) { aviso("No se pudieron cargar los bloques: " + e.message); }
+  }
+
+  function leerDiasCheck() {
+    return [...document.querySelectorAll("#blq-dias input:checked")].map(c => c.value).join(",");
+  }
+
+  async function guardarBloque() {
+    const fila = {
+      nombre: document.getElementById("blq-nombre").value.trim(),
+      hora_inicio: document.getElementById("blq-inicio").value.trim(),
+      hora_fin: document.getElementById("blq-fin").value.trim(),
+      dias: leerDiasCheck(),
+    };
+    if (!fila.nombre) return aviso("Escribe el nombre del bloque.");
+    try {
+      if (editandoBloque) {
+        await sb("PATCH", "/bloques?id=eq." + editandoBloque, fila);
+      } else {
+        await sb("POST", "/bloques", { ...fila, orden: Date.now() });
+      }
+      aviso("Bloque guardado ✓");
+      cancelarEdicion("blq");
+      editandoBloque = null;
+      document.getElementById("form-blq-titulo").textContent = "Nuevo bloque";
+      document.getElementById("btn-save-blq").textContent = "Agregar";
+      cargarBloques();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function empezarEdicionBloque(id) {
+    try {
+      const rows = await sb("GET", "/bloques?select=*&id=eq." + id);
+      const b = rows[0];
+      if (!b) return;
+      document.getElementById("blq-nombre").value = b.nombre || "";
+      document.getElementById("blq-inicio").value = b.hora_inicio || "";
+      document.getElementById("blq-fin").value = b.hora_fin || "";
+      const dias = String(b.dias || "").split(",").map(d => d.trim());
+      document.querySelectorAll("#blq-dias input").forEach(c => c.checked = dias.includes(c.value));
+      editandoBloque = id;
+      document.getElementById("form-blq").hidden = false;
+      document.getElementById("form-blq-titulo").textContent = "Editar bloque";
+      document.getElementById("btn-save-blq").textContent = "Guardar cambios";
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function borrarBloque(id) {
+    if (!confirm("¿Borrar este bloque? (Se borran también sus reservas.)")) return;
+    try {
+      await sb("DELETE", "/bloques?id=eq." + id);
+      aviso("Bloque borrado ✓");
+      cargarBloques();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function moverBloque(id, dir) {
+    try {
+      const data = await sb("GET", "/bloques?select=id,orden&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      await sb("PATCH", "/bloques?id=eq." + data[i].id, { orden: data[j].orden });
+      await sb("PATCH", "/bloques?id=eq." + data[j].id, { orden: data[i].orden });
+      cargarBloques();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  // ---------------- Reservas ----------------
+  let filtroReservas = "pendiente";
+
+  function setFiltroReservas(f) {
+    filtroReservas = f;
+    cargarReservas();
+  }
+
+  function waNum(tel) { return String(tel || "").replace(/\D/g, ""); }
+
+  async function cargarReservas() {
+    try {
+      let q = "/reservas?select=*,bloques(nombre)&order=creado_en.desc";
+      if (filtroReservas !== "todas") q += "&estado=eq." + filtroReservas;
+      const data = await sb("GET", q);
+      document.getElementById("lista-reservas").innerHTML = (data || []).map(r => {
+        const bloque = (r.bloques && r.bloques.nombre) || ("Bloque " + r.bloque_id);
+        const msgConf = encodeURIComponent(`¡Hola ${r.nombre}! Tu reserva en D'Angel Gelsoft fue CONFIRMADA: ${r.fecha}, bloque ${bloque}. ¡Te esperamos! 🎯`);
+        const msgRech = encodeURIComponent(`Hola ${r.nombre}, tu solicitud de reserva en D'Angel Gelsoft (${r.fecha}, bloque ${bloque}) no pudo ser confirmada. Escríbenos para buscar otra fecha.`);
+        return `
+        <div class="card"><div class="top">
+          <div><div class="title">${escapeHtml(r.nombre)} <span class="badge ${r.estado}">${r.estado}</span></div>
+          <div class="sub">📅 ${escapeHtml(r.fecha)} · ${escapeHtml(bloque)}<br>
+          👥 ${r.personas} persona(s) · 📞 ${escapeHtml(r.telefono)}</div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            ${r.estado === "pendiente" ? `
+              <button class="icon" style="color:#4ade80;border-color:#1d5c2e" onclick="cambiarEstadoReserva(${r.id}, 'confirmada')">✔ Aceptar</button>
+              <button class="icon" style="color:#ff7b7b;border-color:#552222" onclick="cambiarEstadoReserva(${r.id}, 'rechazada')">✖ Rechazar</button>` : ``}
+            <a href="https://wa.me/${waNum(r.telefono)}?text=${r.estado === "rechazada" ? msgRech : msgConf}" target="_blank" style="text-decoration:none">
+              <button class="icon" type="button">💬 Avisar por WhatsApp</button>
+            </a>
+          </div></div>
+        </div></div>`;
+      }).join("")
+        || `<div class="empty">No hay reservas ${filtroReservas === "todas" ? "" : filtroReservas + "s"}.</div>`;
+    } catch (e) { aviso("No se pudieron cargar las reservas: " + e.message); }
+  }
+
+  async function cambiarEstadoReserva(id, estado) {
+    try {
+      await sb("PATCH", "/reservas?id=eq." + id, { estado });
+      aviso(estado === "confirmada" ? "Reserva confirmada ✓" : "Reserva rechazada ✓");
+      cargarReservas();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
   // ---------------- Ver el JSON que recibe la app ----------------
   async function verJson() {
     const salida = document.getElementById("salida-json");
@@ -474,6 +840,9 @@
     }
     try { await cargarInfo(); } catch (e) { aviso("No se pudo cargar la info: " + e.message); }
     await cargarListas();
+    cargarGaleria();
+    cargarBloques();
+    cargarReservas();
   })();
 </script>
 </body>
