@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,10 +82,14 @@ class MainActivity : ComponentActivity() {
                 var splashDone by remember { mutableStateOf(false) }
                 var config by remember { mutableStateOf<AppConfig?>(null) }
                 var offline by remember { mutableStateOf(false) }
-                var tab by remember { mutableIntStateOf(0) }
-                // Overlays (null = none).
-                var overlay by remember { mutableStateOf<String?>(null) }
+                val tab = remember { mutableIntStateOf(0) }
+                val overlay: MutableState<String?> = remember { mutableStateOf<String?>(null) }
                 var unread by remember { mutableIntStateOf(0) }
+
+                // System back closes overlays first.
+                BackHandler(enabled = overlay.value != null) {
+                    overlay.value = null
+                }
 
                 // 1. Instant: cached content, never a spinner.
                 LaunchedEffect(Unit) {
@@ -94,7 +99,7 @@ class MainActivity : ComponentActivity() {
                     config = cached
                     val seen = AnnouncementPrefs.seenIds(context)
                     unread = cached.announcements.count { it.id !in seen && it.id != 0L }
-                    if (openAnnouncementsOnStart) overlay = "avisos"
+                    if (openAnnouncementsOnStart) overlay.value = "avisos"
 
                     // 2. Background refresh.
                     val fresh = ConfigRepository.refreshFromNetwork(context)
@@ -141,122 +146,130 @@ class MainActivity : ComponentActivity() {
                     return@DangelTheme
                 }
 
-                // System back closes overlays first.
-                BackHandler(enabled = overlay != null) {
-                    overlay = null
-                }
-
-                val goReserve = { overlay = "reservar" }
-                val openAvisos = {
-                    overlay = "avisos"
-                    AnnouncementPrefs.markSeen(context, current.announcements.map { it.id })
-                    unread = 0
-                }
-
-                @OptIn(ExperimentalMaterial3Api::class)
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text("D'Angel Gelsoft") },
-                            actions = {
-                                IconButton(onClick = openAvisos) {
-                                    BadgedBox(
-                                        badge = {
-                                            if (unread > 0) Badge { Text("$unread") }
-                                        },
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Notifications,
-                                            contentDescription = "Avisos",
-                                        )
-                                    }
-                                }
-                            },
-                        )
-                    },
-                    floatingActionButton = {
-                        ExtendedFloatingActionButton(
-                            onClick = goReserve,
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.Black,
-                        ) {
-                            Text("Reservar", fontSize = 15.sp)
-                        }
-                    },
-                    bottomBar = {
-                        NavigationBar {
-                            val items = listOf(
-                                Triple("Inicio", Icons.Filled.Home, 0),
-                                Triple("Precios", Icons.Filled.AttachMoney, 1),
-                                Triple("Galería", Icons.Filled.PhotoLibrary, 2),
-                                Triple("Contacto", Icons.Filled.Person, 3),
-                            )
-                            for ((label, icon, index) in items) {
-                                NavigationBarItem(
-                                    selected = tab == index && overlay == null,
-                                    onClick = {
-                                        tab = index
-                                        overlay = null
-                                    },
-                                    icon = { Icon(icon, contentDescription = label) },
-                                    label = { Text(label) },
-                                )
-                            }
-                        }
-                    },
-                ) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                    ) {
-                        if (offline) {
-                            Text(
-                                text = "Sin conexión: mostrando datos guardados",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 12.sp,
-                                modifier = Modifier
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(top = 8.dp),
-                            )
-                        }
-                        Box(modifier = Modifier.weight(1f).fillMaxSize()) {
-                            when (overlay) {
-                                "reservar" -> ReservationScreen(
-                                    config = current,
-                                    onDone = { overlay = null },
-                                    onMyReservations = { overlay = "mis_reservas" },
-                                )
-                                "avisos" -> AnnouncementsScreen(current)
-                                "mis_reservas" -> MyReservationsScreen(current)
-                                else -> when (tab) {
-                                    0 -> HomeScreen(
-                                        config = current,
-                                        onReserve = goReserve,
-                                        onSeePrices = { tab = 1 },
-                                        onSeeAnnouncements = openAvisos,
-                                        onSeeGallery = { tab = 2 },
-                                    )
-                                    1 -> PricesScreen(current)
-                                    2 -> GalleryScreen(current)
-                                    else -> ContactScreen(
-                                        config = current,
-                                        onMyReservations = { overlay = "mis_reservas" },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Back from overlays returns to the tabs.
+                DangelScaffold(
+                    current = current,
+                    tab = tab,
+                    overlay = overlay,
+                    offline = offline,
+                    unread = unread,
+                    onAvisosSeen = { unread = 0 },
+                )
             }
         }
     }
+}
 
-    override fun onBackPressed() {
-        // Overlays are handled by the compose state; the system back
-        // closes the activity only from the main tabs.
-        super.onBackPressed()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DangelScaffold(
+    current: AppConfig,
+    tab: MutableState<Int>,
+    overlay: MutableState<String?>,
+    offline: Boolean,
+    unread: Int,
+    onAvisosSeen: () -> Unit,
+) {
+    val context = LocalContext.current
+
+    val goReserve = { overlay.value = "reservar" }
+    val openAvisos = {
+        overlay.value = "avisos"
+        AnnouncementPrefs.markSeen(context, current.announcements.map { it.id })
+        onAvisosSeen()
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("D'Angel Gelsoft") },
+                actions = {
+                    IconButton(onClick = openAvisos) {
+                        BadgedBox(
+                            badge = {
+                                if (unread > 0) Badge { Text("$unread") }
+                            },
+                        ) {
+                            Icon(
+                                Icons.Filled.Notifications,
+                                contentDescription = "Avisos",
+                            )
+                        }
+                    }
+                },
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = goReserve,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.Black,
+            ) {
+                Text("Reservar", fontSize = 15.sp)
+            }
+        },
+        bottomBar = {
+            NavigationBar {
+                val items = listOf(
+                    Triple("Inicio", Icons.Filled.Home, 0),
+                    Triple("Precios", Icons.Filled.AttachMoney, 1),
+                    Triple("Galería", Icons.Filled.PhotoLibrary, 2),
+                    Triple("Contacto", Icons.Filled.Person, 3),
+                )
+                for ((label, icon, index) in items) {
+                    NavigationBarItem(
+                        selected = tab.value == index && overlay.value == null,
+                        onClick = {
+                            tab.value = index
+                            overlay.value = null
+                        },
+                        icon = { Icon(icon, contentDescription = label) },
+                        label = { Text(label) },
+                    )
+                }
+            }
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            if (offline) {
+                Text(
+                    text = "Sin conexión: mostrando datos guardados",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp),
+                )
+            }
+            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+                when (overlay.value) {
+                    "reservar" -> ReservationScreen(
+                        config = current,
+                        onDone = { overlay.value = null },
+                        onMyReservations = { overlay.value = "mis_reservas" },
+                    )
+                    "avisos" -> AnnouncementsScreen(current)
+                    "mis_reservas" -> MyReservationsScreen(current)
+                    else -> when (tab.value) {
+                        0 -> HomeScreen(
+                            config = current,
+                            onReserve = goReserve,
+                            onSeePrices = { tab.value = 1 },
+                            onSeeAnnouncements = openAvisos,
+                            onSeeGallery = { tab.value = 2 },
+                        )
+                        1 -> PricesScreen(current)
+                        2 -> GalleryScreen(current)
+                        else -> ContactScreen(
+                            config = current,
+                            onMyReservations = { overlay.value = "mis_reservas" },
+                        )
+                    }
+                }
+            }
+        }
     }
 }
