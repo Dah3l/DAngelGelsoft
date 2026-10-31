@@ -31,19 +31,13 @@
     {
       "nombre": "Sesión de día",
       "descripcion": "Partida diurna en el campo, incluye equipo y protección.",
-      "precio_cup": 999,
+      "precio_cup": 500,
       "unidad": "por persona"
     },
     {
       "nombre": "Experiencia nocturna",
       "descripcion": "Sesión especial nocturna con escenarios iluminados.",
       "precio_cup": 800,
-      "unidad": "por persona"
-    },
-    {
-      "nombre": "Pack grupo (5 o más)",
-      "descripcion": "Precio por persona para grupos de 5 o más jugadores.",
-      "precio_cup": 400,
       "unidad": "por persona"
     }
   ],
