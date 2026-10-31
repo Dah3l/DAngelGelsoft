@@ -98,6 +98,9 @@
         <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
         <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
       </div>
+      <div class="row">
+        <div><label>Adelanto % (se cobra por adelantado)</label><input id="info-adelanto" type="number" min="0" max="100" placeholder="50"></div>
+      </div>
       <button onclick="guardarInfo()">Guardar información</button>
     </div>
   </section>
@@ -192,6 +195,9 @@
       <div class="row">
         <div><label>Hora inicio</label><input id="blq-inicio" placeholder="10:00 AM"></div>
         <div><label>Hora fin</label><input id="blq-fin" placeholder="1:00 PM"></div>
+      </div>
+      <div class="row">
+        <div><label>Precio por persona (CUP)</label><input id="blq-precio" type="number" min="0" placeholder="500"></div>
       </div>
       <label>Días que aplica</label>
       <div id="blq-dias" class="dias-check">
@@ -308,6 +314,7 @@
     document.getElementById("info-correo").value = data.correo || "";
     document.getElementById("info-tel1").value = data.telefono_reserva_1 || "";
     document.getElementById("info-tel2").value = data.telefono_reserva_2 || "";
+    document.getElementById("info-adelanto").value = data.adelanto_pct ?? 50;
   }
 
   async function guardarInfo() {
@@ -322,6 +329,7 @@
       correo: document.getElementById("info-correo").value.trim(),
       telefono_reserva_1: document.getElementById("info-tel1").value.trim(),
       telefono_reserva_2: document.getElementById("info-tel2").value.trim(),
+      adelanto_pct: parseInt(document.getElementById("info-adelanto").value) || 0,
     };
     try {
       await sb("POST", "/business_info", fila);
@@ -410,7 +418,7 @@
       hor: ["hor-titulo", "hor-dias", "hor-apertura", "hor-cierre", "hor-nota"],
       pre: ["pre-nombre", "pre-desc", "pre-precio", "pre-unidad"],
       anu: ["anu-titulo", "anu-texto", "anu-fecha"],
-      blq: ["blq-nombre", "blq-inicio", "blq-fin"],
+      blq: ["blq-nombre", "blq-inicio", "blq-fin", "blq-precio"],
     }[sec];
     if (!ids) return;
     ids.forEach(id => document.getElementById(id).value = id === "pre-unidad" ? "por persona" : "");
@@ -701,7 +709,7 @@
       const data = await sb("GET", "/bloques?select=*&order=orden.asc");
       document.getElementById("lista-bloques").innerHTML = (data || []).map(b => `
         <div class="card"><div class="top">
-          <div><div class="title">${escapeHtml(b.nombre)}</div>
+          <div><div class="title">${escapeHtml(b.nombre)} — ${b.precio || 0} CUP / persona</div>
           <div class="sub">${escapeHtml(b.hora_inicio)} – ${escapeHtml(b.hora_fin)} · ${diasTexto(b.dias)}</div></div>
           <div class="actions">
             <button class="icon" title="Editar" onclick="empezarEdicionBloque(${b.id})">✏️</button>
@@ -724,6 +732,7 @@
       hora_inicio: document.getElementById("blq-inicio").value.trim(),
       hora_fin: document.getElementById("blq-fin").value.trim(),
       dias: leerDiasCheck(),
+      precio: parseFloat(document.getElementById("blq-precio").value) || 0,
     };
     if (!fila.nombre) return aviso("Escribe el nombre del bloque.");
     try {
@@ -749,6 +758,7 @@
       document.getElementById("blq-nombre").value = b.nombre || "";
       document.getElementById("blq-inicio").value = b.hora_inicio || "";
       document.getElementById("blq-fin").value = b.hora_fin || "";
+      document.getElementById("blq-precio").value = b.precio || 0;
       const dias = String(b.dias || "").split(",").map(d => d.trim());
       document.querySelectorAll("#blq-dias input").forEach(c => c.checked = dias.includes(c.value));
       editandoBloque = id;
