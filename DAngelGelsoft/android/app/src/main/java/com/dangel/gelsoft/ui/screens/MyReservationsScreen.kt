@@ -1,7 +1,11 @@
 package com.dangel.gelsoft.ui.screens
 import com.dangel.gelsoft.ui.theme.DangelType
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,8 +30,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -137,14 +144,14 @@ fun MyReservationsScreen(config: AppConfig) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Mis reservas", style = DangelType.Title)
+            Text("Mis misiones", style = DangelType.Title)
             IconButton(onClick = { refresh() }) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Actualizar")
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "Tus solicitudes y su estado. La base de datos solo confirma si fueron aceptadas o rechazadas.",
+            "Tus misiones y su estado. El campo confirma cada solicitud.",
             style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -154,7 +161,7 @@ fun MyReservationsScreen(config: AppConfig) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         } else if (rows.isEmpty()) {
             Text(
-                "Aún no tienes reservas. Usa el botón central para reservar tu sesión.",
+                "Aún no tienes misiones. Usa la mira central para alistarte.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -165,19 +172,24 @@ fun MyReservationsScreen(config: AppConfig) {
                 else -> Color(0xFFFFD60A)
             }
             val estadoLabel = when (r.estado) {
-                "confirmada" -> "Confirmada"
-                "rechazada" -> "Rechazada"
-                else -> "Pendiente"
+                "confirmada" -> "Misión confirmada"
+                "rechazada" -> "Misión reprogramada"
+                else -> "En espera de órdenes"
             }
-            Card(
+            // Chapa militar: tarjeta con el agujero de la cadena.
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 10.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                ) {
+                    Column(modifier = Modifier.padding(top = 18.dp, start = 14.dp, end = 14.dp, bottom = 14.dp)) {
                     Text(
                         estadoLabel,
                         style = DangelType.BodyBold,
@@ -198,7 +210,17 @@ fun MyReservationsScreen(config: AppConfig) {
                         style = DangelType.Body,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    }
                 }
+                // Agujero de la chapa.
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .align(Alignment.TopCenter)
+                        .offset(y = 7.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.background),
+                )
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
