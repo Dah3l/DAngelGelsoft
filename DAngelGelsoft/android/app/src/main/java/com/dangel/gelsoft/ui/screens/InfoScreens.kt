@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,12 +31,12 @@ fun SchedulesScreen(config: AppConfig) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text("Horarios", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Horarios", style = DangelType.Title)
         Spacer(modifier = Modifier.height(12.dp))
         if (config.schedules.isEmpty()) {
             Text(
                 "Pronto publicaremos los horarios. Escríbenos por WhatsApp para reservar.",
-                fontSize = 15.sp,
+                style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -51,19 +51,19 @@ fun SchedulesScreen(config: AppConfig) {
                 ),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(schedule.title, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text(schedule.title, style = DangelType.CardTitle)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(schedule.days, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                    Text(schedule.days, style = DangelType.Body, color = MaterialTheme.colorScheme.primary)
                     Text(
                         "${schedule.openTime} – ${schedule.closeTime}",
-                        fontSize = 15.sp,
+                        style = DangelType.Body,
                         fontWeight = FontWeight.SemiBold,
                     )
                     if (schedule.note.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             schedule.note,
-                            fontSize = 14.sp,
+                            style = DangelType.Body,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -77,18 +77,18 @@ fun SchedulesScreen(config: AppConfig) {
             ),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Ubicación", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text("Ubicación", style = DangelType.CardTitle)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(config.info.location, fontSize = 15.sp)
+                Text(config.info.location, style = DangelType.Body)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Reservas", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text("Reservas", style = DangelType.CardTitle)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(config.info.phone1, fontSize = 15.sp)
-                Text(config.info.phone2, fontSize = 15.sp)
+                Text(config.info.phone1, style = DangelType.Body)
+                Text(config.info.phone2, style = DangelType.Body)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     "Instagram: @${config.info.instagram}",
-                    fontSize = 15.sp,
+                    style = DangelType.Body,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -106,18 +106,18 @@ fun PricesScreen(config: AppConfig) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text("Precios", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Precios", style = DangelType.Title)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             "Modalidades y precios publicados por el negocio.",
-            fontSize = 14.sp,
+            style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(12.dp))
         if (config.prices.isEmpty()) {
             Text(
                 "Pronto publicaremos las modalidades y precios. Escríbenos por WhatsApp para más información.",
-                fontSize = 15.sp,
+                style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -132,20 +132,19 @@ fun PricesScreen(config: AppConfig) {
                 ),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(price.name, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text(price.name, style = DangelType.CardTitle)
                     if (price.description.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             price.description,
-                            fontSize = 14.sp,
+                            style = DangelType.Body,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "${price.priceCup} CUP ${price.unit}",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = DangelType.Section,
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -164,12 +163,12 @@ fun AnnouncementsScreen(config: AppConfig) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text("Avisos y noches especiales", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Avisos y noches especiales", style = DangelType.Title)
         Spacer(modifier = Modifier.height(12.dp))
         if (config.announcements.isEmpty()) {
             Text(
                 "Pronto publicaremos nuevas actividades. Síguenos en Instagram para enterarte primero.",
-                fontSize = 15.sp,
+                style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -194,9 +193,9 @@ fun AnnouncementsScreen(config: AppConfig) {
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    Text(announcement.title, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text(announcement.title, style = DangelType.CardTitle)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(announcement.body, fontSize = 15.sp)
+                    Text(announcement.body, style = DangelType.Body)
                 }
             }
         }
