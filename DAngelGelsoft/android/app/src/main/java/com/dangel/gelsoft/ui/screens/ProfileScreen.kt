@@ -1,4 +1,6 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.DogTagAvatar
+import com.dangel.gelsoft.ui.components.VelcroRank
 import com.dangel.gelsoft.ui.theme.DangelType
 import android.Manifest
 import android.content.pm.PackageManager
@@ -86,21 +88,8 @@ fun ProfileScreen(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ---------- Avatar ----------
-        Box(
-            modifier = Modifier
-                .size(96.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                ProfileStore.initials(nombre),
-                fontSize = 38.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-            )
-        }
+        // ---------- Avatar: chapa militar ----------
+        DogTagAvatar(initials = ProfileStore.initials(nombre))
         Spacer(modifier = Modifier.height(12.dp))
 
         // ---------- Name as title, phone as subtitle ----------
@@ -127,26 +116,7 @@ fun ProfileScreen(
             confirmedCount >= 1 -> "Soldado"
             else -> "Recluta"
         }
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
-                .padding(horizontal = 14.dp, vertical = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Icon(
-                Icons.Filled.MilitaryTech,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp),
-            )
-            Text(
-                "Rango: $rankLabel",
-                style = DangelType.BodyBold,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        VelcroRank(rank = rankLabel)
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(onClick = { showEdit = true }) {
