@@ -31,7 +31,7 @@ fun SchedulesScreen(config: AppConfig) {
             .verticalScroll(rememberScrollState())
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
     ) {
-        Text("Horarios", style = DangelType.Title)
+        Text("Horario de operaciones", style = DangelType.Title)
         Spacer(modifier = Modifier.height(12.dp))
         if (config.schedules.isEmpty()) {
             Text(
@@ -106,7 +106,7 @@ fun PricesScreen(config: AppConfig) {
             .verticalScroll(rememberScrollState())
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
     ) {
-        Text("Precios", style = DangelType.Title)
+        Text("Operaciones", style = DangelType.Title)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             "Modalidades y precios publicados por el negocio.",
@@ -163,7 +163,7 @@ fun AnnouncementsScreen(config: AppConfig) {
             .verticalScroll(rememberScrollState())
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
     ) {
-        Text("Avisos y noches especiales", style = DangelType.Title)
+        Text("Órdenes del campo", style = DangelType.Title)
         Spacer(modifier = Modifier.height(12.dp))
         if (config.announcements.isEmpty()) {
             Text(
