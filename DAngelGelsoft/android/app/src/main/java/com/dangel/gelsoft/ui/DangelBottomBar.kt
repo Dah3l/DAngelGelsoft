@@ -1,4 +1,6 @@
 package com.dangel.gelsoft.ui
+import com.dangel.gelsoft.ui.components.CrosshairIcon
+import com.dangel.gelsoft.ui.components.HelmetIcon
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +41,7 @@ import androidx.compose.ui.unit.sp
  * following the reference design: floating dark rounded bar, the center
  * circle in brand teal elevated above the bar.
  *
- * Tabs: 0 Inicio · 1 Precios · 2 Galería · 3 Perfil.
+ * Tabs: 0 Inicio · 1 Operaciones · 2 En acción · 3 Soldado.
  */
 @Composable
 fun DangelBottomBar(
@@ -50,10 +52,15 @@ fun DangelBottomBar(
 ) {
     val teal = MaterialTheme.colorScheme.primary
     val items = listOf(
-        BottomTab("Inicio", Icons.Filled.Home, 0),
-        BottomTab("Precios", Icons.Filled.AttachMoney, 1),
-        BottomTab("Galería", Icons.Filled.PhotoLibrary, 2),
-        BottomTab("Perfil", Icons.Filled.Person, 3),
+        BottomTab("Inicio", 0) { c, m -> Icon(Icons.Filled.Home, null, tint = c, modifier = m) },
+        BottomTab("Operaciones", 1) { c, m ->
+            Icon(Icons.Filled.AttachMoney, null, tint = c, modifier = m)
+        },
+        BottomTab("En acción", 2) { c, m ->
+            Icon(Icons.Filled.PhotoLibrary, null, tint = c, modifier = m)
+        },
+        // TODO: swap for painterResource(R.drawable.ic_helmet) once the client PNG is uploaded.
+        BottomTab("Soldado", 3) { c, m -> HelmetIcon(color = c, modifier = m) },
     )
 
     Box(
@@ -110,17 +117,19 @@ fun DangelBottomBar(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                Icons.Filled.EventAvailable,
-                contentDescription = "Reservar",
-                tint = Color.Black,
+            CrosshairIcon(
+                color = Color.Black,
                 modifier = Modifier.size(30.dp),
             )
         }
     }
 }
 
-private data class BottomTab(val label: String, val icon: ImageVector, val index: Int)
+private data class BottomTab(
+    val label: String,
+    val index: Int,
+    val icon: @Composable (color: Color, modifier: Modifier) -> Unit,
+)
 
 @Composable
 private fun BarItem(
@@ -142,7 +151,7 @@ private fun BarItem(
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(tab.icon, contentDescription = tab.label, tint = color, modifier = Modifier.size(24.dp))
+        tab.icon(color, Modifier.size(24.dp))
         Text(
             tab.label,
             style = DangelType.Tiny,
