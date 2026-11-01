@@ -11,9 +11,20 @@
   header { padding: 18px 20px 12px; border-bottom: 2px solid var(--teal); }
   header h1 { margin: 0; font-size: 22px; }
   header p { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
-  nav.pills { position: sticky; top: 0; z-index: 10; background: #0a0a0a; padding: 10px 12px; display: flex; gap: 8px; overflow-x: auto; border-bottom: 1px solid var(--line); }
-  nav.pills button { flex: 0 0 auto; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin: 0; }
-  nav.pills button.active { background: var(--teal); color: #000; border-color: var(--teal); }
+  #topbar { position: sticky; top: 0; z-index: 30; background: #0a0a0a; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+  #topbar h1 { font-size: 17px; margin: 0; flex: 1; }
+  #btn-menu { background: transparent; border: 1px solid var(--line); border-radius: 8px; color: #fff; font-size: 20px; padding: 6px 12px; margin: 0; cursor: pointer; }
+  #overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 40; display: none; }
+  #overlay.open { display: block; }
+  #drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; max-width: 85vw; background: #141414; z-index: 50; transform: translateX(-105%); transition: transform .25s ease; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+  #drawer.open { transform: translateX(0); }
+  #drawer .drawer-head { padding: 18px 16px 12px; border-bottom: 1px solid var(--line); }
+  #drawer .drawer-head b { font-size: 17px; }
+  #drawer .drawer-head small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  #drawer nav { padding: 8px; overflow-y: auto; }
+  #drawer nav button { display: flex; align-items: center; gap: 12px; width: 100%; background: transparent; border: 0; color: #fff; font-size: 16px; padding: 13px 12px; border-radius: 10px; margin: 2px 0; cursor: pointer; text-align: left; }
+  #drawer nav button .ico { font-size: 20px; width: 28px; text-align: center; }
+  #drawer nav button.active { background: rgba(0,209,193,.15); color: var(--teal); font-weight: bold; }
   main { max-width: 820px; margin: 0 auto; padding: 20px; }
   .banner { background: #1c2b29; border: 1px solid var(--teal); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px; }
   .banner b { color: var(--teal); }
@@ -57,21 +68,24 @@
 </style>
 </head>
 <body>
-<header>
+<div id="topbar">
+  <button id="btn-menu" onclick="abrirMenu()">☰</button>
   <h1>Panel — D'Angel Gelsoft</h1>
-  <p>Edita el contenido de la app sin tocar código. Al guardar, la app lo muestra en minutos.</p>
-</header>
-
-<nav class="pills" id="pills">
-  <button data-sec="reservas" class="active">Reservas</button>
-  <button data-sec="info">Info</button>
-  <button data-sec="horarios">Horarios</button>
-  <button data-sec="precios">Precios</button>
-  <button data-sec="avisos">Avisos</button>
-  <button data-sec="galeria">Galería</button>
-  <button data-sec="bloques">Bloques</button>
-  <button data-sec="json">JSON</button>
-</nav>
+</div>
+<div id="overlay" onclick="cerrarMenu()"></div>
+<aside id="drawer">
+  <div class="drawer-head"><b>D'Angel Gelsoft</b><small>Panel de administración</small></div>
+  <nav id="drawer-nav">
+    <button data-sec="reservas" class="active" onclick="irA('reservas')"><span class="ico">📋</span>Reservas</button>
+    <button data-sec="info" onclick="irA('info')"><span class="ico">ℹ️</span>Info del negocio</button>
+    <button data-sec="horarios" onclick="irA('horarios')"><span class="ico">🕐</span>Horarios</button>
+    <button data-sec="precios" onclick="irA('precios')"><span class="ico">💰</span>Precios</button>
+    <button data-sec="avisos" onclick="irA('avisos')"><span class="ico">📢</span>Avisos</button>
+    <button data-sec="galeria" onclick="irA('galeria')"><span class="ico">🖼️</span>Galería</button>
+    <button data-sec="bloques" onclick="irA('bloques')"><span class="ico">🎯</span>Bloques</button>
+    <button data-sec="json" onclick="irA('json')"><span class="ico">📄</span>Ver JSON</button>
+  </nav>
+</aside>
 
 <main>
   <div class="banner">
@@ -358,15 +372,23 @@ function cambiarToken() {
     return ((rows[0] && rows[0].orden) || 0) + 1;
   }
 
-  // ---------- Navegación por pills ----------
-  document.getElementById("pills").addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    document.querySelectorAll("#pills button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+  // ---------- Menú lateral ----------
+  function abrirMenu() {
+    document.getElementById("drawer").classList.add("open");
+    document.getElementById("overlay").classList.add("open");
+  }
+  function cerrarMenu() {
+    document.getElementById("drawer").classList.remove("open");
+    document.getElementById("overlay").classList.remove("open");
+  }
+  function irA(sec) {
+    document.querySelectorAll("#drawer-nav button").forEach(b => b.classList.remove("active"));
+    document.querySelector(`#drawer-nav button[data-sec="${sec}"]`).classList.add("active");
     document.querySelectorAll("main > section").forEach(s => s.hidden = true);
-    document.getElementById("sec-" + btn.dataset.sec).hidden = false;
-  });
+    document.getElementById("sec-" + sec).hidden = false;
+    cerrarMenu();
+    window.scrollTo(0, 0);
+  }
 
   function aviso(texto) {
     const el = document.getElementById("estado");
