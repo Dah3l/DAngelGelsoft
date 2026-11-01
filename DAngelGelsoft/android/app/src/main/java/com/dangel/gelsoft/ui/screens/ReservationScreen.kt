@@ -2,6 +2,7 @@ package com.dangel.gelsoft.ui.screens
 import com.dangel.gelsoft.ui.components.SkeletonCard
 import com.dangel.gelsoft.ui.components.CutCornerShape
 import com.dangel.gelsoft.ui.components.DangelMono
+import com.dangel.gelsoft.ui.components.formatFechaCorta
 import com.dangel.gelsoft.ui.components.TacticalStepHeader
 import com.dangel.gelsoft.ui.components.hazardStripes
 import com.dangel.gelsoft.ui.theme.DangelType
@@ -112,7 +113,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
         val waMsg = "🎯 *NUEVA MISIÓN* — D'Angel Gelsoft\n" +
             "───────────────────\n" +
             "👤 *Soldado:* $nombre\n" +
-            "📅 *Fecha:* $fechaStr\n" +
+            "📅 *Fecha:* ${formatFechaCorta(fechaStr)}\n" +
             "⏰ *Bloque:* ${b.name}\n" +
             "🕐 *Horario:* ${b.startTime} – ${b.endTime}\n" +
             "👥 *Personas:* $personas\n" +
@@ -159,7 +160,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "$fechaStr · Bloque ${b.name} (${b.startTime} – ${b.endTime})",
+                "${formatFechaCorta(fechaStr)} · Bloque ${b.name} (${b.startTime} – ${b.endTime})",
                 style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
