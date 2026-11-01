@@ -1,4 +1,9 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.CamTag
+import com.dangel.gelsoft.ui.components.CutCornerShape
+import com.dangel.gelsoft.ui.components.DangelMono
+import com.dangel.gelsoft.ui.components.HudCorners
+import com.dangel.gelsoft.ui.components.TacticalSectionHeader
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -18,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,14 +95,20 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // ---------- Hero ----------
-        Image(
-            painter = painterResource(id = R.drawable.logo_dangel),
-            contentDescription = "Logo de D'Angel Gelsoft",
-            modifier = Modifier
-                .size(150.dp)
-                .clip(RoundedCornerShape(20.dp)),
-            contentScale = ContentScale.Fit,
-        )
+        Box(
+            modifier = Modifier.size(170.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_dangel),
+                contentDescription = "Logo de D'Angel Gelsoft",
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Fit,
+            )
+            HudCorners(modifier = Modifier.fillMaxSize())
+        }
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = info.slogan,
@@ -115,34 +127,50 @@ fun HomeScreen(
         Button(
             onClick = onReserve,
             modifier = Modifier.fillMaxWidth(),
+            shape = CutCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.Black,
             ),
         ) {
-            Text("Reservar mi sesión", style = DangelType.CardTitle)
+            Text(
+                "[ DESPLEGAR ]  RESERVAR MI SESIÓN",
+                fontFamily = DangelMono,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         // ---------- Galería (carrusel) ----------
         if (carouselPhotos.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader(title = "Galería", onSeeAll = onSeeGallery, seeAllText = "Ver más")
+            TacticalSectionHeader(code = "SYS.01", title = "Galería", onSeeAll = onSeeGallery, seeAllText = "Ver más")
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                items(carouselPhotos, key = { it.id }) { photo ->
-                    AsyncImage(
-                        model = photo.url,
-                        contentDescription = "Foto de la galería",
+                itemsIndexed(carouselPhotos, key = { _, p -> p.id }) { index, photo ->
+                    Box(
                         modifier = Modifier
                             .size(width = 170.dp, height = 120.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(CutCornerShape(6.dp))
                             .clickable { onSeeGallery() },
-                        contentScale = ContentScale.Crop,
-                    )
+                    ) {
+                        AsyncImage(
+                            model = photo.url,
+                            contentDescription = "Foto de la galería",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                        CamTag(
+                            label = "CAM_%02d".format(index + 1),
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(6.dp),
+                        )
+                    }
                 }
             }
         }
@@ -150,13 +178,14 @@ fun HomeScreen(
         // ---------- Horarios ----------
         if (config.schedules.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader(title = "Horario de operaciones", onSeeAll = null)
+            TacticalSectionHeader(code = "SYS.02", title = "Horario de operaciones", onSeeAll = null)
             Spacer(modifier = Modifier.height(8.dp))
             for (schedule in config.schedules) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 10.dp),
+                    shape = CutCornerShape(6.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                     ),
@@ -165,7 +194,9 @@ fun HomeScreen(
                         Text(schedule.title, style = DangelType.CardTitle)
                         Text(
                             "${schedule.days} · ${schedule.openTime} – ${schedule.closeTime}",
-                            style = DangelType.Body,
+                            fontFamily = DangelMono,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
                         if (schedule.note.isNotBlank()) {
@@ -182,7 +213,7 @@ fun HomeScreen(
 
         // ---------- Información de contacto ----------
         Spacer(modifier = Modifier.height(24.dp))
-        SectionHeader(title = "Contacto", onSeeAll = null)
+        TacticalSectionHeader(code = "SYS.03", title = "Contacto", onSeeAll = null)
         Spacer(modifier = Modifier.height(8.dp))
 
         HomeContactRow(
