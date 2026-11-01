@@ -28,9 +28,9 @@ object AnnouncementNotifier {
             manager.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
-                    "Avisos de D'Angel Gelsoft",
+                    "Órdenes del campo",
                     NotificationManager.IMPORTANCE_DEFAULT,
-                ).apply { description = "Noches especiales y avisos del campo" }
+                ).apply { description = "Órdenes y noches especiales del campo" }
             )
         }
     }
@@ -48,7 +48,7 @@ object AnnouncementNotifier {
         )
         val first = fresh.first()
         val title = if (fresh.size == 1) first.title
-        else "${fresh.size} avisos nuevos en D'Angel Gelsoft"
+        else "${fresh.size} nuevas órdenes del campo 📢"
         val text = if (fresh.size == 1) first.body else first.title
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.logo_dangel)
