@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,10 +78,18 @@ fun MyReservationsScreen(config: AppConfig) {
             for (l in local) {
                 val phone8 = ReservationStore.normPhone(l.telefono)
                 seen.add(Triple(l.fecha, l.bloqueId, phone8))
-                val estado = db.firstOrNull { d ->
+                val remote = db.firstOrNull { d ->
                     d.fecha == l.fecha && d.bloqueId == l.bloqueId &&
                         ReservationStore.normPhone(d.telefono) == phone8
-                }?.estado ?: "pendiente"
+                }
+                // Persist the fresh estado (offline-first); fall back to the
+                // cached one when there's no connection.
+                val estado = remote?.estado ?: l.estado
+                if (remote != null && remote.estado != l.estado) {
+                    ReservationStore.updateEstado(
+                        context, l.fecha, l.bloqueId, phone8, remote.estado,
+                    )
+                }
                 out.add(
                     Row(
                         fecha = l.fecha,
@@ -129,7 +137,7 @@ fun MyReservationsScreen(config: AppConfig) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Mis reservas", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("Mis reservas", style = DangelType.Title)
             IconButton(onClick = { refresh() }) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Actualizar")
             }
@@ -137,7 +145,7 @@ fun MyReservationsScreen(config: AppConfig) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             "Tus solicitudes y su estado. La base de datos solo confirma si fueron aceptadas o rechazadas.",
-            fontSize = 14.sp,
+            style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -172,14 +180,13 @@ fun MyReservationsScreen(config: AppConfig) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         estadoLabel,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = DangelType.BodyBold,
                         color = estadoColor,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         "${r.fecha} · Bloque ${r.bloqueNombre}",
-                        fontSize = 15.sp,
+                        style = DangelType.Body,
                     )
                     val detail = buildString {
                         append("${r.personas} persona(s)")
@@ -188,7 +195,7 @@ fun MyReservationsScreen(config: AppConfig) {
                     }
                     Text(
                         detail,
-                        fontSize = 14.sp,
+                        style = DangelType.Body,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
