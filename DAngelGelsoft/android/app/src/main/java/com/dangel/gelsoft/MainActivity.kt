@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -334,6 +335,21 @@ private fun DangelScaffold(
                     }
                     }
             }
+            // Scrim: el contenido se difumina bajo la navbar flotante.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color(0xFF121212).copy(alpha = 0.92f),
+                            ),
+                        ),
+                    ),
+            )
             DangelBottomBar(
                 selectedTab = tab.value,
                 onTabSelected = {
