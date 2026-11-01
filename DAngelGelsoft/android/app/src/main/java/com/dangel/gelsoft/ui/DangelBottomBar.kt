@@ -2,6 +2,7 @@ package com.dangel.gelsoft.ui
 import com.dangel.gelsoft.R
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -78,9 +79,10 @@ fun DangelBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(12.dp, RoundedCornerShape(28.dp))
+                .shadow(20.dp, RoundedCornerShape(28.dp))
                 .clip(RoundedCornerShape(28.dp))
                 .background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, Color(0xFF3A3A3A), RoundedCornerShape(28.dp))
                 .padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
