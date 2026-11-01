@@ -29,8 +29,14 @@
   ],
   "precios": [
     {
-      "nombre": "Combate diurno",
+      "nombre": "Combate matutino",
       "descripcion": "Partida diurna en el campo, incluye equipo y protección.",
+      "precio_cup": 500,
+      "unidad": "por persona"
+    },
+    {
+      "nombre": "Combate vespertino",
+      "descripcion": "Combate vespertino en el campo, incluye equipo y protección.",
       "precio_cup": 500,
       "unidad": "por persona"
     },
