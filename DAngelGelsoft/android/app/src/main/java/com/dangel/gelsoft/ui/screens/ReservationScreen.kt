@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -142,26 +142,24 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 "¡Solicitud registrada!",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+                style = DangelType.Title,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "$fechaStr · Bloque ${b.name} (${b.startTime} – ${b.endTime})",
-                fontSize = 15.sp,
+                style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 "Total: ${formatCup(total)} · Adelanto ($adelantoPct%): ${formatCup(adelanto)}",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+                style = DangelType.BodyBold,
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Se abrió WhatsApp con el mensaje listo: solo toca enviar para avisar al administrador.",
-                fontSize = 14.sp,
+                style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (waFailed) {
@@ -189,17 +187,17 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text("Reservar", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Reservar", style = DangelType.Title)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             "Elige el día y el bloque. La reserva queda pendiente hasta que el administrador la confirme.",
-            fontSize = 14.sp,
+            style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         // ---------- Fecha ----------
-        Text("1. Elige el día", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text("1. Elige el día", style = DangelType.CardTitle)
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedButton(
             onClick = {
@@ -218,7 +216,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
 
         // ---------- Bloque ----------
         Spacer(modifier = Modifier.height(16.dp))
-        Text("2. Elige el bloque", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text("2. Elige el bloque", style = DangelType.CardTitle)
         Spacer(modifier = Modifier.height(8.dp))
         if (availableBlocks.isEmpty()) {
             Text(
@@ -254,7 +252,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
 
         // ---------- Datos ----------
         Spacer(modifier = Modifier.height(16.dp))
-        Text("3. Tus datos", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text("3. Tus datos", style = DangelType.CardTitle)
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = nombre,
@@ -274,9 +272,9 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Personas: ", fontSize = 15.sp)
+            Text("Personas: ", style = DangelType.Body)
             OutlinedButton(onClick = { if (personas > 1) personas-- }) { Text("−") }
-            Text(" $personas ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(" $personas ", style = DangelType.CardTitle)
             OutlinedButton(onClick = { if (personas < 50) personas++ }) { Text("+") }
         }
 
@@ -286,7 +284,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             val total = b.price * personas
             val adelanto = total * adelantoPct / 100.0
             Spacer(modifier = Modifier.height(16.dp))
-            Text("4. Precio", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("4. Precio", style = DangelType.CardTitle)
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -308,7 +306,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         "El adelanto se paga por adelantado para confirmar la reserva.",
-                        fontSize = 12.sp,
+                        style = DangelType.Tiny,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -317,7 +315,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
 
         errorMsg?.let {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(it, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
+            Text(it, color = MaterialTheme.colorScheme.error, style = DangelType.Body)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -386,13 +384,13 @@ private fun PriceRow(
     ) {
         Text(
             label,
-            fontSize = 14.sp,
+            style = DangelType.Body,
             fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             value,
-            fontSize = 14.sp,
+            style = DangelType.Body,
             fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
             color = if (highlight) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface,
