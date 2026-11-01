@@ -59,7 +59,7 @@ fun DangelBottomBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            .padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Row(
