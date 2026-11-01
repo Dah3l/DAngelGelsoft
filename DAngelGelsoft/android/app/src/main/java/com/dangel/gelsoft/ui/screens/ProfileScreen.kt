@@ -1,6 +1,6 @@
 package com.dangel.gelsoft.ui.screens
-import com.dangel.gelsoft.ui.components.DogTagAvatar
-import com.dangel.gelsoft.ui.components.VelcroRank
+import com.dangel.gelsoft.ui.components.HorizontalDogTag
+import com.dangel.gelsoft.ui.components.RankInsignia
 import com.dangel.gelsoft.ui.theme.DangelType
 import android.Manifest
 import android.content.pm.PackageManager
@@ -88,24 +88,6 @@ fun ProfileScreen(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ---------- Avatar: chapa militar ----------
-        DogTagAvatar(initials = ProfileStore.initials(nombre))
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ---------- Name as title, phone as subtitle ----------
-        Text(
-            text = nombre.ifBlank { "Tu perfil" },
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = telefono.ifBlank { "Agrega tus datos para reservar más rápido" },
-            style = DangelType.Body,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
         // ---------- Rango táctico ----------
         val confirmedCount = remember {
             ReservationStore.all(context).count { it.estado == "confirmada" }
@@ -116,7 +98,17 @@ fun ProfileScreen(
             confirmedCount >= 1 -> "Soldado"
             else -> "Recluta"
         }
-        VelcroRank(rank = rankLabel)
+
+        // ---------- Insignia del rango ----------
+        RankInsignia(rank = rankLabel)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ---------- Dog tag horizontal ----------
+        HorizontalDogTag(
+            name = nombre,
+            phone = telefono,
+            rank = rankLabel,
+        )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(onClick = { showEdit = true }) {
