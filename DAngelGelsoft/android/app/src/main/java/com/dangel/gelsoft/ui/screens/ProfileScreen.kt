@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -110,7 +110,7 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = telefono.ifBlank { "Agrega tus datos para reservar más rápido" },
-            fontSize = 14.sp,
+            style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -145,14 +145,14 @@ fun ProfileScreen(
                     modifier = Modifier.size(26.dp),
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Mis reservas", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Mis reservas", style = DangelType.CardTitle)
                     Text(
                         "Mira el estado de tus solicitudes",
-                        fontSize = 13.sp,
+                        style = DangelType.Caption,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("›", style = DangelType.Title, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
@@ -160,8 +160,7 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             "Ajustes",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            style = DangelType.Section,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -186,12 +185,12 @@ fun ProfileScreen(
                     modifier = Modifier.size(26.dp),
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Notificaciones", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Notificaciones", style = DangelType.CardTitle)
                     Text(
                         if (notifOn && hasSystemPermission()) "Activadas"
                         else if (notifOn) "Actívalas en el sistema"
                         else "Desactivadas",
-                        fontSize = 13.sp,
+                        style = DangelType.Caption,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -243,7 +242,7 @@ fun ProfileScreen(
                     )
                     editError?.let {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+                        Text(it, color = MaterialTheme.colorScheme.error, style = DangelType.Caption)
                     }
                 }
             },
