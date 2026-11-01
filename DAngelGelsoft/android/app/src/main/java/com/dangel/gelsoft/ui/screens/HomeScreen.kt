@@ -3,6 +3,7 @@ import com.dangel.gelsoft.ui.components.CamTag
 import com.dangel.gelsoft.ui.components.CutCornerShape
 import com.dangel.gelsoft.ui.components.DangelMono
 import com.dangel.gelsoft.ui.components.HudCorners
+import com.dangel.gelsoft.ui.components.PulsingCtaButton
 import com.dangel.gelsoft.ui.components.TacticalSectionHeader
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.Canvas
@@ -124,22 +125,10 @@ fun HomeScreen(
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(18.dp))
-        Button(
+        PulsingCtaButton(
+            text = "SOLICITAR MISIÓN",
             onClick = onReserve,
-            modifier = Modifier.fillMaxWidth(),
-            shape = CutCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.Black,
-            ),
-        ) {
-            Text(
-                "[ DESPLEGAR ]  RESERVAR MI SESIÓN",
-                fontFamily = DangelMono,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        )
 
         // ---------- Galería (carrusel) ----------
         if (carouselPhotos.isNotEmpty()) {
