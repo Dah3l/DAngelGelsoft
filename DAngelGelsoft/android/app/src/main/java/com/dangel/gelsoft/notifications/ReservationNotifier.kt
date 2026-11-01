@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.dangel.gelsoft.MainActivity
+import com.dangel.gelsoft.ui.components.formatFechaCorta
 import com.dangel.gelsoft.R
 
 /**
@@ -54,7 +55,7 @@ object ReservationNotifier {
         } else {
             "Misión reprogramada ❌" to "❌"
         }
-        val text = "$emoji $fecha · Bloque $bloqueNombre — " +
+        val text = "$emoji ${formatFechaCorta(fecha)} · Bloque $bloqueNombre — " +
             if (estado == "confirmada") {
                 "el campo confirmó tu misión. ¡Nos vemos en la base!"
             } else {
