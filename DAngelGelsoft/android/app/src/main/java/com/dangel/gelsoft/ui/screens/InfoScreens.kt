@@ -29,7 +29,7 @@ fun SchedulesScreen(config: AppConfig) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
     ) {
         Text("Horarios", style = DangelType.Title)
         Spacer(modifier = Modifier.height(12.dp))
@@ -104,7 +104,7 @@ fun PricesScreen(config: AppConfig) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
     ) {
         Text("Precios", style = DangelType.Title)
         Spacer(modifier = Modifier.height(4.dp))
@@ -161,7 +161,7 @@ fun AnnouncementsScreen(config: AppConfig) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 104.dp),
     ) {
         Text("Avisos y noches especiales", style = DangelType.Title)
         Spacer(modifier = Modifier.height(12.dp))
