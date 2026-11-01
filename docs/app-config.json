@@ -123,7 +123,7 @@
   "bloques": [
     {
       "id": 1,
-      "nombre": "Operación táctica diurna",
+      "nombre": "Operación táctica Matutina",
       "hora_inicio": "10:00 AM",
       "hora_fin": "11:00 AM",
       "dias": "1,2,3,4,5,6,7",
@@ -131,7 +131,7 @@
     },
     {
       "id": 4,
-      "nombre": "Operación táctica diurna",
+      "nombre": "Operación táctica Matutina",
       "hora_inicio": "11:00 AM",
       "hora_fin": "12:00 PM",
       "dias": "1,2,3,4,5,6,7",
@@ -147,7 +147,7 @@
     },
     {
       "id": 5,
-      "nombre": "Tarde Sesión 2",
+      "nombre": "Operación táctica Vespertina",
       "hora_inicio": "3:00 PM",
       "hora_fin": "4:00 PM",
       "dias": "1,2,3,4,5,6,7",
