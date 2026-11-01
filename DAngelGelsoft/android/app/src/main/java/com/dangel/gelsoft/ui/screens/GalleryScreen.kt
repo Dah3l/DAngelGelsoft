@@ -1,4 +1,5 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.CamTag
 import com.dangel.gelsoft.ui.components.shimmer
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -109,7 +111,7 @@ fun GalleryScreen(config: AppConfig) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            items(photos, key = { it.id }) { photo ->
+            itemsIndexed(photos, key = { _, p -> p.id }) { index, photo ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,6 +131,12 @@ fun GalleryScreen(config: AppConfig) {
                             )
                         },
                     contentScale = ContentScale.Crop,
+                    )
+                    CamTag(
+                        label = "CAM_%02d".format(index + 1),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(6.dp),
                     )
                 }
             }
