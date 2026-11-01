@@ -258,9 +258,9 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(if (isTaken) Modifier.hazardStripes() else Modifier),
-                    shape = CutCornerShape(4.dp),
+                        .then(if (isTaken) Modifier.hazardStripes() else Modifier)
                         .padding(bottom = 8.dp),
+                    shape = CutCornerShape(4.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = Color.Black,
