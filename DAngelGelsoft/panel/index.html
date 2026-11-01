@@ -21,7 +21,7 @@
   h2 { margin: 0 0 4px; font-size: 19px; }
   .sec-desc { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
   label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-  input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: #1e1e1e; color: #fff; font-size: 15px; }
+  input, textarea, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: #1e1e1e; color: #fff; font-size: 15px; }
   textarea { min-height: 70px; }
   button { background: var(--teal); color: #000; border: 0; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
   button.sec { background: transparent; color: #fff; border: 1px solid var(--line); }
@@ -223,7 +223,26 @@
     <div class="row" style="margin-bottom:12px">
       <button class="sec" id="filtro-pendientes" onclick="setFiltroReservas('pendiente')">Pendientes</button>
       <button class="sec" id="filtro-todas" onclick="setFiltroReservas('todas')">Todas</button>
+      <button onclick="toggleFormReserva()">＋ Nueva reserva</button>
     </div>
+    <div id="form-reserva" class="card" style="display:none;margin-bottom:16px"><div class="top"><div>
+      <div class="title">Nueva reserva manual</div>
+      <div class="sub">Para clientes que reservan por WhatsApp, DM o presencial. Se crea confirmada y el bloque queda ocupado en la app.</div>
+      <label>Nombre del cliente</label>
+      <input id="nr-nombre" placeholder="Nombre">
+      <div class="row">
+        <div><label>Teléfono</label><input id="nr-tel" inputmode="tel" placeholder="5XXXXXXXX"></div>
+        <div><label>Personas</label><input id="nr-personas" type="number" min="1" value="1"></div>
+      </div>
+      <div class="row">
+        <div><label>Fecha</label><input id="nr-fecha" type="date"></div>
+        <div><label>Bloque</label><select id="nr-bloque"></select></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="guardarReservaManual()">Guardar y avisar por WhatsApp</button>
+        <button class="sec" onclick="toggleFormReserva()">Cancelar</button>
+      </div>
+    </div></div></div>
     <div id="lista-reservas"></div>
   </section>
 
@@ -941,6 +960,75 @@ function cambiarToken() {
         : "Misión rechazada ✓ — WhatsApp abierto para avisar");
       cargarReservas();
     } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  // ---------------- Reserva manual (WhatsApp / DM / presencial) ----------------
+  let bloquesCache = [];
+
+  async function toggleFormReserva() {
+    const f = document.getElementById("form-reserva");
+    const show = f.style.display === "none";
+    f.style.display = show ? "block" : "none";
+    if (show) {
+      const hoy = new Date();
+      document.getElementById("nr-fecha").value =
+        hoy.getFullYear() + "-" + String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
+        String(hoy.getDate()).padStart(2, "0");
+      try {
+        bloquesCache = await sb("GET", "/bloques?select=id,nombre,hora_inicio,hora_fin,precio&order=nombre");
+        document.getElementById("nr-bloque").innerHTML = (bloquesCache || []).map(b =>
+          `<option value="${b.id}">${escapeHtml(b.nombre)}${b.hora_inicio ? ` (${b.hora_inicio}–${b.hora_fin})` : ""}</option>`
+        ).join("");
+      } catch (e) { aviso("No se pudieron cargar los bloques: " + e.message); }
+    }
+  }
+
+  async function guardarReservaManual() {
+    const nombre = document.getElementById("nr-nombre").value.trim();
+    const telefono = document.getElementById("nr-tel").value.trim();
+    const fecha = document.getElementById("nr-fecha").value;
+    const bloqueId = document.getElementById("nr-bloque").value;
+    const personas = parseInt(document.getElementById("nr-personas").value, 10) || 0;
+    if (!nombre || !telefono || !fecha || !bloqueId || personas < 1) {
+      aviso("Completa todos los campos."); return;
+    }
+    const bq = (bloquesCache || []).find(b => String(b.id) === String(bloqueId)) || {};
+    try {
+      await sb("POST", "/reservas", {
+        nombre, telefono, fecha,
+        bloque_id: parseInt(bloqueId, 10),
+        personas, estado: "confirmada",
+      });
+    } catch (e) {
+      const msg = String(e.message || "");
+      aviso("No se pudo guardar: " + msg +
+        (msg.includes("duplicate") || msg.includes("23505") ? " — ese bloque ya está ocupado en esa fecha." : ""));
+      return;
+    }
+    let adelantoPct = 50;
+    try {
+      const bi = await sb("GET", "/business_info?select=adelanto_pct&limit=1");
+      if (bi && bi[0] && bi[0].adelanto_pct != null) adelantoPct = bi[0].adelanto_pct;
+    } catch (e) {}
+    const precio = Number(bq.precio || 0);
+    const total = precio * personas;
+    const adelanto = Math.round(total * adelantoPct / 100);
+    const horario = (bq.hora_inicio && bq.hora_fin) ? `${bq.hora_inicio} – ${bq.hora_fin}` : "";
+    const detalle = `${fechaCorta(fecha)} · ${bq.nombre || ""}${horario ? " (" + horario + ")" : ""}`;
+    const msgWa = encodeURIComponent(
+      `¡Hola ${nombre}! Tu misión en D'Angel Gelsoft fue CONFIRMADA 🎯\n` +
+      `📅 ${detalle}\n` +
+      `👥 ${personas} persona(s)\n` +
+      `💰 Total: ${total} CUP · Adelanto (${adelantoPct}%): ${adelanto} CUP\n` +
+      `¡Te esperamos!`
+    );
+    window.open(`https://wa.me/${waNum(telefono)}?text=${msgWa}`, "_blank");
+    document.getElementById("nr-nombre").value = "";
+    document.getElementById("nr-tel").value = "";
+    document.getElementById("nr-personas").value = "1";
+    toggleFormReserva();
+    aviso("Reserva guardada ✓ — WhatsApp abierto para avisar");
+    cargarReservas();
   }
 
   // ---------------- Ver el JSON que recibe la app ----------------
