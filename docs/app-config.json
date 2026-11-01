@@ -20,7 +20,7 @@
       "nota": "Abierto todos los días."
     },
     {
-      "titulo": "Experiencia nocturna",
+      "titulo": "Combate nocturno",
       "dias": "Viernes y sábado",
       "apertura": "8:00 PM",
       "cierre": "10:00 PM",
@@ -67,6 +67,11 @@
       "nombre": "Eventos",
       "fotos": [
         {
+          "id": 6,
+          "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793504799492_1000517367.jpg",
+          "titulo": "1000517367.jpg"
+        },
+        {
           "id": 1,
           "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793467213761_1000513609.jpg",
           "titulo": "1000513609.jpg"
@@ -75,11 +80,6 @@
           "id": 2,
           "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793467227087_1000513606.jpg",
           "titulo": "1000513606.jpg"
-        },
-        {
-          "id": 6,
-          "url": "https://cxkacnymioovvhvwqlsj.supabase.co/storage/v1/object/public/galeria/1793504799492_1000517367.jpg",
-          "titulo": "1000517367.jpg"
         }
       ]
     },
