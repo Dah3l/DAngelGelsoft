@@ -1,4 +1,6 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.CutCornerShape
+import com.dangel.gelsoft.ui.components.DangelMono
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -53,7 +55,13 @@ fun SchedulesScreen(config: AppConfig) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(schedule.title, style = DangelType.CardTitle)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(schedule.days, style = DangelType.Body, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        schedule.days,
+                        fontFamily = DangelMono,
+                        fontWeight = FontWeight.Bold,
+                        style = DangelType.Body,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                     Text(
                         "${schedule.openTime} – ${schedule.closeTime}",
                         style = DangelType.Body,
@@ -127,6 +135,7 @@ fun PricesScreen(config: AppConfig) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp),
+                shape = CutCornerShape(6.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -143,8 +152,10 @@ fun PricesScreen(config: AppConfig) {
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "${price.priceCup} CUP ${price.unit}",
-                        style = DangelType.Section,
+                        "COSTO: ${price.priceCup} CUP ${price.unit}",
+                        fontFamily = DangelMono,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
