@@ -21,7 +21,7 @@
   #drawer .drawer-head { padding: 18px 16px 12px; border-bottom: 1px solid var(--line); }
   #drawer .drawer-head b { font-size: 17px; }
   #drawer .drawer-head small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
-  #drawer nav { padding: 8px; overflow-y: auto; }
+  #drawer nav { padding: 8px; overflow-y: auto; overscroll-behavior: contain; }
   #drawer nav button { display: flex; align-items: center; gap: 12px; width: 100%; background: transparent; border: 0; color: #fff; font-size: 16px; padding: 13px 12px; border-radius: 10px; margin: 2px 0; cursor: pointer; text-align: left; }
   #drawer nav button .ico { font-size: 20px; width: 28px; text-align: center; }
   #drawer nav button.active { background: rgba(0,209,193,.15); color: var(--teal); font-weight: bold; }
@@ -51,6 +51,19 @@
   .toggle input { width: auto; accent-color: var(--teal); }
   .formbox { background: var(--card); border: 1px dashed var(--teal); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
   .formbox h3 { margin: 0 0 6px; font-size: 16px; color: var(--teal); }
+  /* Formularios como modales: fijos, centrados, con scroll propio bloqueado */
+  .formbox[hidden] { display: none !important; }
+  .formbox:not([hidden]) {
+    display: block; position: fixed; z-index: 60;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(560px, calc(100vw - 32px)); max-height: 88vh;
+    overflow-y: auto; overscroll-behavior: contain;
+    background: var(--card); border: 1px solid var(--teal);
+    border-radius: 14px; padding: 20px; margin: 0;
+    box-shadow: 0 12px 48px rgba(0,0,0,.6);
+  }
+  #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 55; display: none; }
+  #modal-overlay.open { display: block; }
   .form-actions { display: flex; gap: 10px; }
   .empty { color: var(--muted); font-size: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 12px; }
   .dias-check { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
@@ -73,6 +86,7 @@
   <h1>Panel — D'Angel Gelsoft</h1>
 </div>
 <div id="overlay" onclick="cerrarMenu()"></div>
+<div id="modal-overlay" onclick="cerrarModales()"></div>
 <aside id="drawer">
   <div class="drawer-head"><b>D'Angel Gelsoft</b><small>Panel de administración</small></div>
   <nav id="drawer-nav">
@@ -191,7 +205,7 @@
       <label>Nombre</label><input id="sec-nombre" placeholder="Ej: Armas">
       <div class="form-actions">
         <button onclick="guardarSeccion()">Agregar</button>
-        <button class="sec" onclick="document.getElementById('form-sec').hidden=true">Cancelar</button>
+        <button class="sec" onclick="cerrarModal('form-sec')">Cancelar</button>
       </div>
     </div>
     <div id="fotos-seccion"></div>
@@ -239,8 +253,8 @@
       <button class="sec" id="filtro-todas" onclick="setFiltroReservas('todas')">Todas</button>
       <button onclick="toggleFormReserva()">＋ Nueva reserva</button>
     </div>
-    <div id="form-reserva" class="card" style="display:none;margin-bottom:16px"><div class="top"><div>
-      <div class="title">Nueva reserva manual</div>
+    <div id="form-reserva" class="formbox" hidden>
+      <h3>Nueva reserva manual</h3>
       <div class="sub">Para clientes que reservan por WhatsApp, DM o presencial. Se crea confirmada y el bloque queda ocupado en la app.</div>
       <label>Nombre del cliente</label>
       <input id="nr-nombre" placeholder="Nombre">
@@ -252,11 +266,11 @@
         <div><label>Fecha</label><input id="nr-fecha" type="date" onchange="actualizarDisponibilidadBloques()"></div>
         <div><label>Bloque</label><select id="nr-bloque"></select></div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div class="form-actions">
         <button onclick="guardarReservaManual()">Guardar y avisar por WhatsApp</button>
-        <button class="sec" onclick="toggleFormReserva()">Cancelar</button>
+        <button class="sec" onclick="cerrarModal('form-reserva')">Cancelar</button>
       </div>
-    </div></div></div>
+    </div>
     <div id="lista-reservas"></div>
   </section>
 
@@ -372,14 +386,42 @@ function cambiarToken() {
     return ((rows[0] && rows[0].orden) || 0) + 1;
   }
 
+  // ---------- Bloqueo de scroll del fondo ----------
+  let scrollLocks = 0;
+  function lockScroll() { if (scrollLocks++ === 0) document.body.style.overflow = "hidden"; }
+  function unlockScroll() { if (--scrollLocks <= 0) { scrollLocks = 0; document.body.style.overflow = ""; } }
+
   // ---------- Menú lateral ----------
   function abrirMenu() {
     document.getElementById("drawer").classList.add("open");
     document.getElementById("overlay").classList.add("open");
+    lockScroll();
   }
   function cerrarMenu() {
     document.getElementById("drawer").classList.remove("open");
     document.getElementById("overlay").classList.remove("open");
+    unlockScroll();
+  }
+
+  // ---------- Modales ----------
+  function abrirModal(id) {
+    document.getElementById(id).hidden = false;
+    document.getElementById("modal-overlay").classList.add("open");
+    lockScroll();
+  }
+  function cerrarModal(id) {
+    document.getElementById(id).hidden = true;
+    if (!document.querySelector(".formbox:not([hidden])")) {
+      document.getElementById("modal-overlay").classList.remove("open");
+      unlockScroll();
+    }
+  }
+  function cerrarModales() {
+    document.querySelectorAll(".formbox:not([hidden])").forEach(f => f.hidden = true);
+    document.getElementById("modal-overlay").classList.remove("open");
+    // Suelta todos los locks de modales (el del drawer, si está, se mantiene aparte).
+    scrollLocks = document.getElementById("drawer").classList.contains("open") ? 1 : 0;
+    document.body.style.overflow = scrollLocks ? "hidden" : "";
   }
   function irA(sec) {
     document.querySelectorAll("#drawer-nav button").forEach(b => b.classList.remove("active"));
@@ -503,8 +545,8 @@ function cambiarToken() {
   // ---------------- Formularios: mostrar / editar / cancelar ----------------
   function toggleForm(sec) {
     const form = document.getElementById("form-" + sec);
-    form.hidden = !form.hidden;
-    if (!form.hidden) {
+    if (form.hidden) { abrirModal("form-" + sec); } else { cerrarModal("form-" + sec); return; }
+    {
       editando = { seccion: null, id: null };
       if (sec === "blq") {
         editandoBloque = null;
@@ -530,7 +572,7 @@ function cambiarToken() {
   }
 
   function cancelarEdicion(sec) {
-    document.getElementById("form-" + sec).hidden = true;
+    cerrarModal("form-" + sec);
     limpiarForm(sec);
     editando = { seccion: null, id: null };
     if (sec === "blq") { editandoBloque = null; return; }
@@ -565,7 +607,7 @@ function cambiarToken() {
       document.getElementById("anu-fecha").value = data.fecha || "";
     }
     editando = { seccion: sec, id };
-    document.getElementById("form-" + sec).hidden = false;
+    abrirModal("form-" + sec);
     document.getElementById("form-" + sec + "-titulo").textContent = "Editar";
     document.getElementById("btn-save-" + sec).textContent = "Guardar cambios";
     document.getElementById("form-" + sec).scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -694,7 +736,7 @@ function cambiarToken() {
     try {
       await sb("POST", "/gallery_sections", { nombre, orden: await siguienteOrden("gallery_sections") });
       document.getElementById("sec-nombre").value = "";
-      document.getElementById("form-sec").hidden = true;
+      cerrarModal("form-sec");
       aviso("Sección agregada ✓");
       cargarGaleria();
     } catch (e) { aviso("Error: " + e.message); }
@@ -737,7 +779,7 @@ function cambiarToken() {
     }
     const el = document.getElementById("fotos-seccion");
     el.innerHTML = `<h3 style="margin:16px 0 8px">Fotos — ${escapeHtml(nombre)}</h3>` +
-      `<label class="toggle" style="margin-bottom:12px">📤 Subir foto: <input type="file" id="input-foto" accept="image/*" onchange="subirFoto(this)"></label>` +
+      `<button type="button" class="icon" style="margin-bottom:12px" onclick="document.getElementById('input-foto').click()">📤 Subir foto</button><input type="file" id="input-foto" accept="image/*" hidden onchange="subirFoto(this)">` +
       (fotos.map(f => `
         <div class="card"><div class="top">
           <img class="foto-thumb" src="${escapeHtml(f.url)}" alt="">
@@ -754,6 +796,7 @@ function cambiarToken() {
 
   async function subirFoto(input) {
     const file = input.files[0];
+    input.value = "";
     if (!file || !seccionActiva) return;
     aviso("Subiendo foto…");
     try {
@@ -864,7 +907,7 @@ function cambiarToken() {
       const dias = String(b.dias || "").split(",").map(d => d.trim());
       document.querySelectorAll("#blq-dias input").forEach(c => c.checked = dias.includes(c.value));
       editandoBloque = id;
-      document.getElementById("form-blq").hidden = false;
+      abrirModal("form-blq");
       document.getElementById("form-blq-titulo").textContent = "Editar bloque";
       document.getElementById("btn-save-blq").textContent = "Guardar cambios";
     } catch (e) { aviso("Error: " + e.message); }
@@ -989,9 +1032,9 @@ function cambiarToken() {
 
   async function toggleFormReserva() {
     const f = document.getElementById("form-reserva");
-    const show = f.style.display === "none";
-    f.style.display = show ? "block" : "none";
-    if (show) {
+    const show = f.hidden;
+    if (show) { abrirModal("form-reserva"); } else { cerrarModal("form-reserva"); return; }
+    {
       const hoy = new Date();
       document.getElementById("nr-fecha").value =
         hoy.getFullYear() + "-" + String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
@@ -1075,7 +1118,7 @@ function cambiarToken() {
     document.getElementById("nr-nombre").value = "";
     document.getElementById("nr-tel").value = "";
     document.getElementById("nr-personas").value = "1";
-    toggleFormReserva();
+    cerrarModal("form-reserva");
     aviso("Reserva guardada ✓ — WhatsApp abierto para avisar");
     cargarReservas();
   }
