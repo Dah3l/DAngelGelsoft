@@ -1,6 +1,5 @@
 package com.dangel.gelsoft.ui
 import com.dangel.gelsoft.R
-import com.dangel.gelsoft.ui.components.CrosshairIcon
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -124,8 +123,10 @@ fun DangelBottomBar(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            CrosshairIcon(
-                color = Color.Black,
+            Icon(
+                Icons.Filled.EventAvailable,
+                contentDescription = "Reservar",
+                tint = Color.Black,
                 modifier = Modifier.size(30.dp),
             )
         }
