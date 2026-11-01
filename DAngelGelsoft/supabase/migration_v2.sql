@@ -81,7 +81,8 @@ create unique index if not exists reservas_unicas
 -- La app consulta SOLO esta vista (fecha/bloque/estado): nunca expone
 -- nombres ni teléfonos de otros clientes.
 create or replace view public.reservation_slots as
-    select fecha, bloque_id, estado from public.reservas;
+    select fecha, bloque_id, estado from public.reservas
+    where estado != 'rechazada';
 
 -- ============================================================
 -- Seguridad (RLS) — demo: escritura con anon key, como el resto.
