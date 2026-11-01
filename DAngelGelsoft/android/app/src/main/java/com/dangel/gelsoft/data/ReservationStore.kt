@@ -20,6 +20,8 @@ data class LocalReservation(
     val personas: Int,
     val total: Double,
     val creadoEn: Long,
+    /** Last known estado (pendiente / confirmada / rechazada) — works offline. */
+    val estado: String = "pendiente",
 )
 
 object ReservationStore {
@@ -48,6 +50,7 @@ object ReservationStore {
                             personas = o.optInt("personas", 1),
                             total = o.optDouble("total", 0.0),
                             creadoEn = o.optLong("creadoEn", 0),
+                            estado = o.optString("estado", "pendiente"),
                         )
                     )
                 }
@@ -77,6 +80,41 @@ object ReservationStore {
                     .put("personas", x.personas)
                     .put("total", x.total)
                     .put("creadoEn", x.creadoEn)
+                    .put("estado", x.estado)
+            )
+        }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY, arr.toString()).apply()
+    }
+
+    /** Updates the cached estado of a reservation (from a DB refresh). */
+    fun updateEstado(
+        context: Context,
+        fecha: String,
+        bloqueId: Long,
+        phone8: String,
+        estado: String,
+    ) {
+        val updated = all(context).map { r ->
+            if (r.fecha == fecha && r.bloqueId == bloqueId &&
+                normPhone(r.telefono) == phone8
+            ) {
+                r.copy(estado = estado)
+            } else r
+        }
+        val arr = JSONArray()
+        for (x in updated.take(100)) {
+            arr.put(
+                JSONObject()
+                    .put("fecha", x.fecha)
+                    .put("bloqueId", x.bloqueId)
+                    .put("bloqueNombre", x.bloqueNombre)
+                    .put("nombre", x.nombre)
+                    .put("telefono", x.telefono)
+                    .put("personas", x.personas)
+                    .put("total", x.total)
+                    .put("creadoEn", x.creadoEn)
+                    .put("estado", x.estado)
             )
         }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
