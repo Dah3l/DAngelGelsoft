@@ -852,35 +852,73 @@ function cambiarToken() {
 
   // ---------------- Reservas ----------------
   let filtroReservas = "pendiente";
+  let reservasCache = [];
+  const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
   function setFiltroReservas(f) {
     filtroReservas = f;
     cargarReservas();
   }
 
-  function waNum(tel) { return String(tel || "").replace(/\D/g, ""); }
+  // "2026-11-01" -> "1. Nov. 2026" (mismo formato que la app y WhatsApp).
+  function fechaCorta(f) {
+    const p = String(f || "").split("-");
+    if (p.length !== 3) return f;
+    const m = MESES[parseInt(p[1], 10) - 1];
+    if (!m) return f;
+    return `${parseInt(p[2], 10)}. ${m}. ${p[0]}`;
+  }
+
+  function waNum(tel) {
+    let d = String(tel || "").replace(/\D/g, "");
+    if (d.length === 8) d = "53" + d; // móvil cubano sin código país
+    return d;
+  }
 
   async function cargarReservas() {
     try {
-      let q = "/reservas?select=*,bloques(nombre)&order=creado_en.desc";
+      let q = "/reservas?select=*,bloques(nombre,hora_inicio,hora_fin,precio)&order=creado_en.desc";
       if (filtroReservas !== "todas") q += "&estado=eq." + filtroReservas;
       const data = await sb("GET", q);
-      document.getElementById("lista-reservas").innerHTML = (data || []).map(r => {
-        const bloque = (r.bloques && r.bloques.nombre) || ("Bloque " + r.bloque_id);
-        const msgConf = encodeURIComponent(`¡Hola ${r.nombre}! Tu reserva en D'Angel Gelsoft fue CONFIRMADA: ${r.fecha}, bloque ${bloque}. ¡Te esperamos! 🎯`);
-        const msgRech = encodeURIComponent(`Hola ${r.nombre}, tu solicitud de reserva en D'Angel Gelsoft (${r.fecha}, bloque ${bloque}) no pudo ser confirmada. Escríbenos para buscar otra fecha.`);
+      let adelantoPct = 50;
+      try {
+        const bi = await sb("GET", "/business_info?select=adelanto_pct&limit=1");
+        if (bi && bi[0] && bi[0].adelanto_pct != null) adelantoPct = bi[0].adelanto_pct;
+      } catch (e) {}
+      reservasCache = data || [];
+      document.getElementById("lista-reservas").innerHTML = reservasCache.map(r => {
+        const bq = r.bloques || {};
+        const bloque = bq.nombre || ("Bloque " + r.bloque_id);
+        const horario = (bq.hora_inicio && bq.hora_fin) ? `${bq.hora_inicio} – ${bq.hora_fin}` : "";
+        const precio = Number(bq.precio || 0);
+        const personas = Number(r.personas || 0);
+        const total = precio * personas;
+        const adelanto = Math.round(total * adelantoPct / 100);
+        const fechaF = fechaCorta(r.fecha);
+        const detalle = `${fechaF} · ${bloque}${horario ? " (" + horario + ")" : ""}`;
+        // Mensajes prearmados con toda la info (mismo formato de fecha que la app).
+        r._msgConf = encodeURIComponent(
+          `¡Hola ${r.nombre}! Tu misión en D'Angel Gelsoft fue CONFIRMADA 🎯\n` +
+          `📅 ${detalle}\n` +
+          `👥 ${personas} persona(s)\n` +
+          `💰 Total: ${total} CUP · Adelanto (${adelantoPct}%): ${adelanto} CUP\n` +
+          `¡Te esperamos!`
+        );
+        r._msgRech = encodeURIComponent(
+          `Hola ${r.nombre}, tu solicitud en D'Angel Gelsoft (${detalle}) no pudo ser confirmada. ` +
+          `Escríbenos para buscar otra fecha.`
+        );
         return `
         <div class="card"><div class="top">
           <div><div class="title">${escapeHtml(r.nombre)} <span class="badge ${r.estado}">${r.estado}</span></div>
-          <div class="sub">📅 ${escapeHtml(r.fecha)} · ${escapeHtml(bloque)}<br>
-          👥 ${r.personas} persona(s) · 📞 ${escapeHtml(r.telefono)}</div>
+          <div class="sub">📅 ${escapeHtml(fechaF)} · ${escapeHtml(bloque)}<br>
+          ${horario ? `🕐 ${escapeHtml(horario)}<br>` : ""}
+          👥 ${personas} persona(s) · 📞 ${escapeHtml(r.telefono)}<br>
+          💰 ${precio} CUP/persona · Total: ${total} CUP · Adelanto (${adelantoPct}%): ${adelanto} CUP</div>
           <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
             ${r.estado === "pendiente" ? `
-              <button class="icon" style="color:#4ade80;border-color:#1d5c2e" onclick="cambiarEstadoReserva(${r.id}, 'confirmada')">✔ Aceptar</button>
-              <button class="icon" style="color:#ff7b7b;border-color:#552222" onclick="cambiarEstadoReserva(${r.id}, 'rechazada')">✖ Rechazar</button>` : ``}
-            <a href="https://wa.me/${waNum(r.telefono)}?text=${r.estado === "rechazada" ? msgRech : msgConf}" target="_blank" style="text-decoration:none">
-              <button class="icon" type="button">💬 Avisar por WhatsApp</button>
-            </a>
+              <button class="icon" style="color:#4ade80;border-color:#1d5c2e" onclick="decidirReserva(${r.id}, 'confirmada')">✔ Aceptar</button>
+              <button class="icon" style="color:#ff7b7b;border-color:#552222" onclick="decidirReserva(${r.id}, 'rechazada')">✖ Rechazar</button>` : ``}
           </div></div>
         </div></div>`;
       }).join("")
@@ -888,10 +926,18 @@ function cambiarToken() {
     } catch (e) { aviso("No se pudieron cargar las reservas: " + e.message); }
   }
 
-  async function cambiarEstadoReserva(id, estado) {
+  // Aceptar/rechazar: actualiza el estado Y abre el WhatsApp del cliente
+  // con el mensaje prearmado (aprobación o rechazo).
+  async function decidirReserva(id, nuevoEstado) {
+    const r = reservasCache.find(x => x.id === id);
+    if (!r) { aviso("No se encontró la reserva."); return; }
     try {
-      await sb("PATCH", "/reservas?id=eq." + id, { estado });
-      aviso(estado === "confirmada" ? "Reserva confirmada ✓" : "Reserva rechazada ✓");
+      await sb("PATCH", "/reservas?id=eq." + id, { estado: nuevoEstado });
+      const msg = nuevoEstado === "confirmada" ? r._msgConf : r._msgRech;
+      window.open(`https://wa.me/${waNum(r.telefono)}?text=${msg}`, "_blank");
+      aviso(nuevoEstado === "confirmada"
+        ? "Misión confirmada ✓ — WhatsApp abierto para avisar"
+        : "Misión rechazada ✓ — WhatsApp abierto para avisar");
       cargarReservas();
     } catch (e) { aviso("Error: " + e.message); }
   }
