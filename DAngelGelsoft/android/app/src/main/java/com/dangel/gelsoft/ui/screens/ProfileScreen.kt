@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.dangel.gelsoft.data.ProfileStore
+import com.dangel.gelsoft.data.ReservationStore
 
 /**
  * Profile tab: avatar with initials, name as title, phone as subtitle,
@@ -113,6 +115,38 @@ fun ProfileScreen(
             style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // ---------- Rango táctico ----------
+        val confirmedCount = remember {
+            ReservationStore.all(context).count { it.estado == "confirmada" }
+        }
+        val rankLabel = when {
+            confirmedCount >= 6 -> "Élite"
+            confirmedCount >= 3 -> "Veterano"
+            confirmedCount >= 1 -> "Soldado"
+            else -> "Recluta"
+        }
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
+                .padding(horizontal = 14.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(
+                Icons.Filled.MilitaryTech,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                "Rango: $rankLabel",
+                style = DangelType.BodyBold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(onClick = { showEdit = true }) {
@@ -145,9 +179,9 @@ fun ProfileScreen(
                     modifier = Modifier.size(26.dp),
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Mis reservas", style = DangelType.CardTitle)
+                    Text("Mis misiones", style = DangelType.CardTitle)
                     Text(
-                        "Mira el estado de tus solicitudes",
+                        "Mira el estado de tus misiones",
                         style = DangelType.Caption,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
