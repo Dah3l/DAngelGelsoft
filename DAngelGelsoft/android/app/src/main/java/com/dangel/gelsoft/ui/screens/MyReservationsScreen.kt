@@ -1,6 +1,7 @@
 package com.dangel.gelsoft.ui.screens
 import com.dangel.gelsoft.ui.components.SkeletonCard
 import com.dangel.gelsoft.ui.components.DangelMono
+import com.dangel.gelsoft.ui.components.formatFechaCorta
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -204,7 +205,7 @@ fun MyReservationsScreen(config: AppConfig) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "${r.fecha} · Bloque ${r.bloqueNombre}",
+                        "${formatFechaCorta(r.fecha)} · Bloque ${r.bloqueNombre}",
                         fontFamily = DangelMono,
                         style = DangelType.Body,
                     )
