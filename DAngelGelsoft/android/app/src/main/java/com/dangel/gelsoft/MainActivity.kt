@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,7 +44,10 @@ import com.dangel.gelsoft.data.AnnouncementPrefs
 import com.dangel.gelsoft.data.AppConfig
 import com.dangel.gelsoft.data.ConfigRepository
 import com.dangel.gelsoft.data.ProfileStore
+import com.dangel.gelsoft.data.ReservationStore
+import com.dangel.gelsoft.data.SupabaseDirect
 import com.dangel.gelsoft.notifications.AnnouncementNotifier
+import com.dangel.gelsoft.notifications.ReservationNotifier
 import com.dangel.gelsoft.ui.DangelBottomBar
 import com.dangel.gelsoft.ui.screens.AnnouncementsScreen
 import com.dangel.gelsoft.ui.screens.GalleryScreen
@@ -51,9 +55,11 @@ import com.dangel.gelsoft.ui.screens.HomeScreen
 import com.dangel.gelsoft.ui.screens.MyReservationsScreen
 import com.dangel.gelsoft.ui.screens.PricesScreen
 import com.dangel.gelsoft.ui.screens.ProfileScreen
+import com.dangel.gelsoft.ui.screens.ProfileSetupDialog
 import com.dangel.gelsoft.ui.screens.ReservationScreen
 import com.dangel.gelsoft.ui.screens.SplashScreen
 import com.dangel.gelsoft.ui.theme.DangelTheme
+import com.dangel.gelsoft.ui.theme.DangelType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -69,12 +75,16 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
 
     private var openAnnouncementsOnStart by mutableStateOf(false)
+    private var openReservasOnStart by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         val activity = this
         openAnnouncementsOnStart =
             intent?.getBooleanExtra(AnnouncementNotifier.EXTRA_OPEN_ANNOUNCEMENTS, false) == true
+        openReservasOnStart =
+            intent?.getBooleanExtra(ReservationNotifier.EXTRA_OPEN_RESERVAS, false) == true
         setContent {
             DangelTheme {
                 val context = LocalContext.current
@@ -84,6 +94,12 @@ class MainActivity : ComponentActivity() {
                 val tab = remember { mutableIntStateOf(0) }
                 val overlay: MutableState<String?> = remember { mutableStateOf<String?>(null) }
                 var unread by remember { mutableIntStateOf(0) }
+                var showProfileSetup by remember {
+                    mutableStateOf(
+                        !context.getSharedPreferences("dangel_prefs", Context.MODE_PRIVATE)
+                            .getBoolean("perfil_configurado", false)
+                    )
+                }
 
                 // Back: overlay -> previous screen · any tab -> Home · Home: double-press to exit.
                 var lastBackPress by remember { mutableLongStateOf(0L) }
@@ -120,6 +136,7 @@ class MainActivity : ComponentActivity() {
                         cached.announcements.count { it.id !in seen && it.id != 0L }
                     } else 0
                     if (openAnnouncementsOnStart) overlay.value = "avisos"
+                    if (openReservasOnStart) overlay.value = "mis_reservas"
 
                     // 2. Background refresh.
                     val fresh = ConfigRepository.refreshFromNetwork(context)
@@ -144,6 +161,11 @@ class MainActivity : ComponentActivity() {
                         offline = false
                     } else {
                         offline = true
+                    }
+
+                    // 3. Reservation status changes -> system notification.
+                    withContext(Dispatchers.IO) {
+                        checkReservationUpdates(context)
                     }
 
                     // Notification permission (Android 13+).
@@ -189,7 +211,40 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                 )
+
+                if (showProfileSetup) {
+                    ProfileSetupDialog(onDone = { showProfileSetup = false })
+                }
             }
+        }
+    }
+}
+
+/**
+ * Compares the locally cached reservation estados with the DB. Persists any
+ * change (offline-first) and fires a system notification when a reservation
+ * moved to a final state (confirmada / rechazada).
+ */
+private suspend fun checkReservationUpdates(context: Context) {
+    val phone = ProfileStore.getTelefono(context)
+    if (phone.isBlank()) return
+    val local = ReservationStore.all(context)
+    if (local.isEmpty()) return
+    val db = SupabaseDirect.myReservations(phone)
+    for (l in local) {
+        val remote = db.firstOrNull { d ->
+            d.fecha == l.fecha && d.bloqueId == l.bloqueId &&
+                ReservationStore.normPhone(d.telefono) == ReservationStore.normPhone(l.telefono)
+        } ?: continue
+        if (remote.estado == l.estado) continue
+        ReservationStore.updateEstado(
+            context, l.fecha, l.bloqueId,
+            ReservationStore.normPhone(l.telefono), remote.estado,
+        )
+        if ((remote.estado == "confirmada" || remote.estado == "rechazada") &&
+            ProfileStore.notifEnabled(context)
+        ) {
+            ReservationNotifier.notifyStatus(context, l.fecha, l.bloqueNombre, remote.estado)
         }
     }
 }
@@ -234,27 +289,26 @@ private fun DangelScaffold(
                 },
             )
         },
-        bottomBar = {
-            DangelBottomBar(
-                selectedTab = tab.value,
-                onTabSelected = {
-                    tab.value = it
-                    overlay.value = null
-                },
-                onReserve = goReserve,
-            )
-        },
     ) { innerPadding ->
-        Column(
+        // Floating nav: content fills the screen, the bar overlays it.
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 96.dp),
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
             if (offline) {
                 Text(
                     text = "Sin conexión: mostrando datos guardados",
                     color = MaterialTheme.colorScheme.primary,
-                    fontSize = 12.sp,
+                    style = DangelType.Tiny,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 8.dp),
@@ -283,7 +337,18 @@ private fun DangelScaffold(
                         )
                     }
                 }
+                }
             }
+            DangelBottomBar(
+                selectedTab = tab.value,
+                onTabSelected = {
+                    tab.value = it
+                    overlay.value = null
+                },
+                onReserve = goReserve,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
+}
 }
