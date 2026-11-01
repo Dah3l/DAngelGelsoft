@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -76,8 +76,7 @@ fun SplashScreen(slogan: String, onDone: () -> Unit) {
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = slogan,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
+                style = DangelType.CardTitle,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.alpha(textAlpha.value),
