@@ -4,6 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +26,9 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -270,6 +276,192 @@ fun TacticalStepHeader(
             text = "  " + title.uppercase(),
             style = DangelType.Section,
         )
+    }
+}
+
+/**
+ * Rank insignia medallion: metallic circle with chevrons per rank
+ * (Recluta 1, Soldado 2, Veterano 3, Élite 3 + star). Used as the
+ * profile "photo" — it evolves as the soldier ranks up.
+ */
+@Composable
+fun RankInsignia(
+    rank: String,
+    modifier: Modifier = Modifier,
+) {
+    val chevrons = when (rank) {
+        "Soldado" -> 2
+        "Veterano" -> 3
+        "Élite" -> 3
+        else -> 1
+    }
+    val elite = rank == "Élite"
+    val chevColor = if (elite) Color(0xFFE8C84A) else Color(0xFF3FA79B)
+
+    Canvas(modifier = modifier.size(112.dp)) {
+        val d = size.minDimension
+        val cx = size.width / 2f
+        val cy = size.height / 2f
+        // Metallic medallion.
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF4A4A4A), Color(0xFF2A2A2A), Color(0xFF1A1A1A)),
+                center = Offset(cx, cy - d * 0.15f),
+                radius = d * 0.65f,
+            ),
+            radius = d / 2f,
+            center = Offset(cx, cy),
+        )
+        // Outer ring.
+        drawCircle(
+            color = if (elite) Color(0xFFE8C84A).copy(alpha = 0.7f) else Color(0xFF6A6A6A),
+            radius = d / 2f - 3f,
+            center = Offset(cx, cy),
+            style = Stroke(width = 4f),
+        )
+        // Chevrons, stacked upward.
+        val chw = d * 0.42f
+        val chh = d * 0.13f
+        val th = d * 0.045f
+        val gap = d * 0.075f
+        val totalH = chevrons * chh + (chevrons - 1) * gap + (if (elite) d * 0.20f else 0f)
+        var baseY = cy + totalH / 2f
+        repeat(chevrons) {
+            drawChevron(cx, baseY, chw, chh, th, chevColor)
+            baseY -= (chh + gap)
+        }
+        // Star for Élite.
+        if (elite) {
+            drawStar(cx, baseY - d * 0.02f, d * 0.11f, d * 0.045f, chevColor)
+        }
+    }
+}
+
+private fun DrawScope.drawChevron(
+    cx: Float, baseY: Float, w: Float, h: Float, thickness: Float, color: Color,
+) {
+    val path = Path().apply {
+        moveTo(cx - w / 2f, baseY)
+        lineTo(cx, baseY - h)
+        lineTo(cx + w / 2f, baseY)
+        lineTo(cx + w / 2f, baseY + thickness)
+        lineTo(cx, baseY - h + thickness)
+        lineTo(cx - w / 2f, baseY + thickness)
+        close()
+    }
+    drawPath(path, color)
+}
+
+private fun DrawScope.drawStar(
+    cx: Float, cy: Float, rOuter: Float, rInner: Float, color: Color,
+) {
+    val path = Path()
+    for (i in 0 until 10) {
+        val r = if (i % 2 == 0) rOuter else rInner
+        val a = Math.toRadians(-90.0 + i * 36.0)
+        val x = cx + r * kotlin.math.cos(a).toFloat()
+        val y = cy + r * kotlin.math.sin(a).toFloat()
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    path.close()
+    drawPath(path, color)
+}
+
+/**
+ * Stamped/embossed text for metal surfaces: dark offset copy below,
+ * light copy on top.
+ */
+@Composable
+private fun StampedText(
+    text: String,
+    fontFamily: FontFamily? = null,
+    fontSize: androidx.compose.ui.unit.TextUnit = 16.sp,
+    fontWeight: FontWeight = FontWeight.Bold,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        Text(
+            text = text,
+            fontFamily = fontFamily,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            color = Color.Black.copy(alpha = 0.6f),
+            modifier = Modifier.offset(1.dp, 1.dp),
+        )
+        Text(
+            text = text,
+            fontFamily = fontFamily,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            color = Color(0xFFE2E2E2),
+        )
+    }
+}
+
+/**
+ * Horizontal military dog tag: dark metal plate, punched hole on the
+ * left with rolled rim, stamped name / phone / rank.
+ */
+@Composable
+fun HorizontalDogTag(
+    name: String,
+    phone: String,
+    rank: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(118.dp)
+            .clip(RoundedCornerShape(22.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF4C4C4C),
+                        Color(0xFF2E2E2E),
+                        Color(0xFF1D1D1D),
+                    ),
+                ),
+            )
+            .drawBehind {
+                val w = size.width
+                val h = size.height
+                // Top sheen.
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.14f),
+                            Color.Transparent,
+                        ),
+                    ),
+                    size = Size(w, h * 0.35f),
+                )
+                // Punched hole with rolled rim, left side.
+                val hc = Offset(34.dp.toPx(), h / 2f)
+                drawCircle(Color(0xFF707070), radius = 17.dp.toPx(), center = hc)
+                drawCircle(Color(0xFF0B0B0B), radius = 12.dp.toPx(), center = hc)
+            }
+            .padding(start = 68.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            StampedText(
+                text = name.uppercase().ifBlank { "SOLDADO" },
+                fontSize = 19.sp,
+            )
+            StampedText(
+                text = phone.ifBlank { "—" },
+                fontFamily = DangelMono,
+                fontSize = 14.sp,
+            )
+            StampedText(
+                text = "RANGO: ${rank.uppercase()}",
+                fontFamily = DangelMono,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
     }
 }
 
