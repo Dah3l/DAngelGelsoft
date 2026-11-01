@@ -38,12 +38,12 @@ object SupabaseDirect {
 
     /**
      * Block IDs already taken for [fecha] (yyyy-MM-dd): reservations with
-     * estado 'pendiente' or 'confirmada'. Read from the public view, which
-     * exposes no personal data.
+     * estado 'pendiente' or 'confirmada'. Rejected ones free the block.
+     * Read from the public view, which exposes no personal data.
      */
     suspend fun takenBlocks(fecha: String): Set<Long> = withContext(Dispatchers.IO) {
         try {
-            val q = "fecha=eq.$fecha&select=bloque_id"
+            val q = "fecha=eq.$fecha&select=bloque_id,estado"
             val con = URL("$URL_BASE/rest/v1/reservation_slots?$q").openConnection() as HttpURLConnection
             con.requestMethod = "GET"
             con.connectTimeout = 8000
@@ -56,7 +56,11 @@ object SupabaseDirect {
             val arr = JSONArray(readText(con))
             buildSet {
                 for (i in 0 until arr.length()) {
-                    add(arr.optJSONObject(i)?.optLong("bloque_id", -1) ?: -1)
+                    val o = arr.optJSONObject(i) ?: continue
+                    // 'rechazada' frees the block: someone else can book it.
+                    if (o.optString("estado") != "rechazada") {
+                        add(o.optLong("bloque_id", -1))
+                    }
                 }
             }.filter { it >= 0 }.toSet()
         } catch (_: Exception) {
