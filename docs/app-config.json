@@ -155,7 +155,7 @@
     },
     {
       "id": 3,
-      "nombre": "Noche Sesión 1",
+      "nombre": "Operación táctica Nocturna",
       "hora_inicio": "8:00 PM",
       "hora_fin": "9:00 PM",
       "dias": "5,6",
@@ -163,7 +163,7 @@
     },
     {
       "id": 6,
-      "nombre": "Noche Sesión 2",
+      "nombre": "Operación táctica Nocturna",
       "hora_inicio": "9:00 PM",
       "hora_fin": "10:00 PM",
       "dias": "5,6",
