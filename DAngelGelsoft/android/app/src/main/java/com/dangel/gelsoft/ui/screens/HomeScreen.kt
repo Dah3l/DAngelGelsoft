@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -100,15 +100,14 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = info.slogan,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.Bold,
+            style = DangelType.Section,
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = info.description,
-            fontSize = 14.sp,
+            style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -121,7 +120,7 @@ fun HomeScreen(
                 contentColor = Color.Black,
             ),
         ) {
-            Text("Reservar mi sesión", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Reservar mi sesión", style = DangelType.CardTitle)
         }
 
         // ---------- Galería (carrusel) ----------
@@ -163,16 +162,16 @@ fun HomeScreen(
                     ),
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
-                        Text(schedule.title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(schedule.title, style = DangelType.CardTitle)
                         Text(
                             "${schedule.days} · ${schedule.openTime} – ${schedule.closeTime}",
-                            fontSize = 14.sp,
+                            style = DangelType.Body,
                             color = MaterialTheme.colorScheme.primary,
                         )
                         if (schedule.note.isNotBlank()) {
                             Text(
                                 schedule.note,
-                                fontSize = 13.sp,
+                                style = DangelType.Caption,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -238,7 +237,7 @@ private fun SectionHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(title, style = DangelType.Section)
         if (onSeeAll != null) {
             TextButton(onClick = onSeeAll) {
                 Text(seeAllText, color = MaterialTheme.colorScheme.primary)
@@ -265,8 +264,8 @@ private fun HomeContactRow(icon: ImageVector, title: String, value: String) {
                 modifier = Modifier.padding(end = 12.dp),
             )
             Column {
-                Text(title, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                Text(title, style = DangelType.Caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(value, style = DangelType.Body, fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -296,7 +295,7 @@ private fun PhoneTile(phone: String) {
             )
             Text(
                 phone,
-                fontSize = 16.sp,
+                style = DangelType.Lead,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
             )
@@ -370,18 +369,17 @@ private fun InstagramTile(handle: String, onClick: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "Instagram",
-                    fontSize = 13.sp,
+                    style = DangelType.Caption,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     "@" + handle,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = DangelType.CardTitle,
                 )
             }
             Text(
                 "›",
-                fontSize = 22.sp,
+                style = DangelType.Title,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
