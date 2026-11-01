@@ -1,4 +1,5 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.SkeletonCard
 import com.dangel.gelsoft.ui.theme.DangelType
 import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
@@ -231,7 +232,10 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else if (loadingSlots) {
-            CircularProgressIndicator()
+            repeat(3) {
+                SkeletonCard(height = 48.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         } else {
             for (b in availableBlocks) {
                 val isTaken = taken.contains(b.id)
