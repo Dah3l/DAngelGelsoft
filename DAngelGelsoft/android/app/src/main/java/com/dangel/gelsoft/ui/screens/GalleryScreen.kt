@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui.screens
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,14 +58,13 @@ fun GalleryScreen(config: AppConfig) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
             text = "Galería",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
+            style = DangelType.Title,
             modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         )
         if (sections.isEmpty()) {
             Text(
                 text = "Pronto publicaremos fotos del campo.",
-                fontSize = 15.sp,
+                style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp),
             )
@@ -176,7 +175,7 @@ private fun FullscreenPhotoViewer(state: ViewerState, onClose: () -> Unit) {
             Text(
                 text = "${pagerState.currentPage + 1} / ${state.photos.size}",
                 color = Color.White,
-                fontSize = 14.sp,
+                style = DangelType.Body,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 24.dp),
