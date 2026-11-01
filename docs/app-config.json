@@ -131,7 +131,7 @@
     },
     {
       "id": 4,
-      "nombre": "Mañana Sesión 2",
+      "nombre": "Operación táctica diurna",
       "hora_inicio": "11:00 AM",
       "hora_fin": "12:00 PM",
       "dias": "1,2,3,4,5,6,7",
@@ -139,7 +139,7 @@
     },
     {
       "id": 2,
-      "nombre": "Tarde Sesión 1",
+      "nombre": "Operación táctica Vespertina",
       "hora_inicio": "2:00 PM",
       "hora_fin": "3:00 PM",
       "dias": "1,2,3,4,5,6,7",
