@@ -333,6 +333,7 @@ private fun DangelScaffold(
                         }
                     }
                     }
+            }
             DangelBottomBar(
                 selectedTab = tab.value,
                 onTabSelected = {
@@ -344,5 +345,4 @@ private fun DangelScaffold(
             )
         }
     }
-}
 }
