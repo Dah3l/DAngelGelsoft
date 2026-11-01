@@ -57,6 +57,22 @@ import com.dangel.gelsoft.ui.theme.DangelType
 val DangelMono = FontFamily.Monospace
 
 /**
+ * Short tactical date: "2026-11-01" -> "1. Nov. 2026".
+ * Used everywhere a date is shown: app, panel, WhatsApp messages.
+ */
+fun formatFechaCorta(fechaIso: String): String {
+    val p = fechaIso.split("-")
+    if (p.size != 3) return fechaIso
+    val meses = arrayOf(
+        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+    )
+    val m = p[1].toIntOrNull()?.let { meses.getOrNull(it - 1) } ?: return fechaIso
+    val d = p[2].toIntOrNull() ?: return fechaIso
+    return "$d. $m. ${p[0]}"
+}
+
+/**
  * Shape with 45-degree chamfered corners (cut corners), the tactical
  * geometry. Use for cards and buttons; the floating pill navbar stays round.
  */
