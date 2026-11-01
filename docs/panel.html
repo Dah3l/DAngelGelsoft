@@ -911,10 +911,11 @@ function cambiarToken() {
         return `
         <div class="card"><div class="top">
           <div><div class="title">${escapeHtml(r.nombre)} <span class="badge ${r.estado}">${r.estado}</span></div>
-          <div class="sub">📅 ${escapeHtml(fechaF)} · ${escapeHtml(bloque)}<br>
-          ${horario ? `🕐 ${escapeHtml(horario)}<br>` : ""}
-          👥 ${personas} persona(s) · 📞 ${escapeHtml(r.telefono)}<br>
-          💰 ${precio} CUP/persona · Total: ${total} CUP · Adelanto (${adelantoPct}%): ${adelanto} CUP</div>
+          <div class="sub">📞 ${escapeHtml(r.telefono)}<br>
+          📅 ${escapeHtml(fechaF)}${horario ? ` · 🕐 ${escapeHtml(horario)}` : ""}<br>
+          🎯 ${escapeHtml(bloque)}<br>
+          👥 ${personas} persona(s) × ${precio} CUP<br>
+          💰 Total: <b>${total} CUP</b> · Adelanto (${adelantoPct}%): <b>${adelanto} CUP</b></div>
           <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
             ${r.estado === "pendiente" ? `
               <button class="icon" style="color:#4ade80;border-color:#1d5c2e" onclick="decidirReserva(${r.id}, 'confirmada')">✔ Aceptar</button>
