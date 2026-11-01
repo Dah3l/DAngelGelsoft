@@ -42,7 +42,7 @@ fun ProfileSetupDialog(onDone: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = { /* use the buttons */ },
-        title = { Text("Configura tu perfil", style = DangelType.Title) },
+        title = { Text("Ficha del soldado", style = DangelType.Title) },
         text = {
             Column {
                 Text(
