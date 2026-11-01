@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
         openAnnouncementsOnStart =
             intent?.getBooleanExtra(AnnouncementNotifier.EXTRA_OPEN_ANNOUNCEMENTS, false) == true
         openReservasOnStart =
-            intent?.getBooleanExtra(ReservationNotifier.EXTRA_OPEN_RESERVAS, false) == true
+            intent?.getBooleanExtra(ReservationNotifier.EXTRA_OPEN_MISIONES, false) == true
         setContent {
             DangelTheme {
                 val context = LocalContext.current
@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
                         cached.announcements.count { it.id !in seen && it.id != 0L }
                     } else 0
                     if (openAnnouncementsOnStart) overlay.value = "avisos"
-                    if (openReservasOnStart) overlay.value = "mis_reservas"
+                    if (openReservasOnStart) overlay.value = "mis_misiones"
 
                     // 2. Background refresh.
                     val fresh = ConfigRepository.refreshFromNetwork(context)
@@ -282,7 +282,7 @@ private fun DangelScaffold(
                         ) {
                             Icon(
                                 Icons.Filled.Notifications,
-                                contentDescription = "Avisos",
+                                contentDescription = "Órdenes",
                             )
                         }
                     }
@@ -314,10 +314,10 @@ private fun DangelScaffold(
                         "reservar" -> ReservationScreen(
                             config = current,
                             onDone = { overlay.value = null },
-                            onMyReservations = { overlay.value = "mis_reservas" },
+                            onMyReservations = { overlay.value = "mis_misiones" },
                         )
                         "avisos" -> AnnouncementsScreen(current)
-                        "mis_reservas" -> MyReservationsScreen(current)
+                        "mis_misiones" -> MyReservationsScreen(current)
                         else -> when (tab.value) {
                             0 -> HomeScreen(
                                 config = current,
@@ -327,7 +327,7 @@ private fun DangelScaffold(
                             1 -> PricesScreen(current)
                             2 -> GalleryScreen(current)
                             else -> ProfileScreen(
-                                onMyReservations = { overlay.value = "mis_reservas" },
+                                onMyReservations = { overlay.value = "mis_misiones" },
                                 onRequestNotifPermission = onRequestNotifPermission,
                             )
                         }
