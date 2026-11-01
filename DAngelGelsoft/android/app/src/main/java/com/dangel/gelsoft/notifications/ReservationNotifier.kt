@@ -18,7 +18,7 @@ object ReservationNotifier {
 
     const val CHANNEL_ID = "dangel_reservas"
     private const val NOTIF_ID = 1002
-    const val EXTRA_OPEN_RESERVAS = "abrir_mis_reservas"
+    const val EXTRA_OPEN_MISIONES = "abrir_mis_misiones"
 
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -27,9 +27,9 @@ object ReservationNotifier {
             manager.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
-                    "Estado de tus reservas",
+                    "Estado de tus misiones",
                     NotificationManager.IMPORTANCE_DEFAULT,
-                ).apply { description = "Te avisamos cuando confirmen o rechacen tu reserva" }
+                ).apply { description = "Te avisamos cuando confirmen o reprogramen tu misión" }
             )
         }
     }
@@ -42,7 +42,7 @@ object ReservationNotifier {
     ) {
         ensureChannel(context)
         val intent = Intent(context, MainActivity::class.java).apply {
-            putExtra(EXTRA_OPEN_RESERVAS, true)
+            putExtra(EXTRA_OPEN_MISIONES, true)
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val pending = PendingIntent.getActivity(
@@ -50,15 +50,15 @@ object ReservationNotifier {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val (title, emoji) = if (estado == "confirmada") {
-            "¡Reserva confirmada! ✅" to "✅"
+            "¡Misión confirmada! ✅" to "✅"
         } else {
-            "Reserva rechazada ❌" to "❌"
+            "Misión reprogramada ❌" to "❌"
         }
         val text = "$emoji $fecha · Bloque $bloqueNombre — " +
             if (estado == "confirmada") {
-                "el administrador confirmó tu reserva. ¡Nos vemos en el campo!"
+                "el campo confirmó tu misión. ¡Nos vemos en la base!"
             } else {
-                "el administrador rechazó tu reserva. Elige otro bloque disponible."
+                "el campo reprogramó tu misión. Elige otro bloque disponible."
             }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.logo_dangel)
