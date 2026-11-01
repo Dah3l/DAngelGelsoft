@@ -56,31 +56,33 @@ fun HelmetIcon(
         val w = size.width
         val h = size.height
         val path = Path().apply {
-            // Dome.
-            moveTo(w * 0.06f, h * 0.66f)
+            // Dome with flared brim.
+            moveTo(w * 0.04f, h * 0.68f)
             cubicTo(
-                w * 0.06f, h * 0.22f, w * 0.30f, h * 0.06f,
-                w * 0.52f, h * 0.06f,
+                w * 0.04f, h * 0.30f, w * 0.26f, h * 0.08f,
+                w * 0.52f, h * 0.08f,
             )
             cubicTo(
-                w * 0.76f, h * 0.06f, w * 0.93f, h * 0.28f,
-                w * 0.95f, h * 0.60f,
+                w * 0.78f, h * 0.08f, w * 0.94f, h * 0.30f,
+                w * 0.96f, h * 0.62f,
             )
-            // Brim flick.
-            lineTo(w * 1.00f, h * 0.64f)
-            lineTo(w * 0.02f, h * 0.72f)
+            lineTo(w * 1.00f, h * 0.66f)
+            cubicTo(
+                w * 0.70f, h * 0.74f, w * 0.30f, h * 0.76f,
+                w * 0.00f, h * 0.70f,
+            )
             close()
         }
         drawPath(path = path, color = color)
         // Chin strap hint.
         val strap = Path().apply {
-            moveTo(w * 0.30f, h * 0.70f)
-            cubicTo(w * 0.38f, h * 0.86f, w * 0.46f, h * 0.94f, w * 0.52f, h * 0.96f)
-            cubicTo(w * 0.58f, h * 0.94f, w * 0.64f, h * 0.86f, w * 0.70f, h * 0.70f)
+            moveTo(w * 0.34f, h * 0.74f)
+            cubicTo(w * 0.40f, h * 0.88f, w * 0.46f, h * 0.94f, w * 0.52f, h * 0.95f)
+            cubicTo(w * 0.58f, h * 0.94f, w * 0.64f, h * 0.88f, w * 0.70f, h * 0.74f)
         }
         drawPath(
             path = strap, color = color,
-            style = Stroke(width = w * 0.07f, cap = StrokeCap.Round),
+            style = Stroke(width = w * 0.045f, cap = StrokeCap.Round),
         )
     }
 }
