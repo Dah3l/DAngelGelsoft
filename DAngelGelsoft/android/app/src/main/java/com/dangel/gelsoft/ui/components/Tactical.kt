@@ -1,5 +1,17 @@
 package com.dangel.gelsoft.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -297,6 +310,7 @@ fun RankInsignia(
     }
     val elite = rank == "Élite"
     val chevColor = if (elite) Color(0xFFE8C84A) else Color(0xFF3FA79B)
+    val borderColor = Color(0xFFE8C84A)
 
     Canvas(modifier = modifier.size(112.dp)) {
         val d = size.minDimension
@@ -319,34 +333,54 @@ fun RankInsignia(
             center = Offset(cx, cy),
             style = Stroke(width = 4f),
         )
-        // Chevrons, stacked upward.
-        val chw = d * 0.42f
-        val chh = d * 0.13f
-        val th = d * 0.045f
-        val gap = d * 0.075f
-        val totalH = chevrons * chh + (chevrons - 1) * gap + (if (elite) d * 0.20f else 0f)
-        var baseY = cy + totalH / 2f
-        repeat(chevrons) {
-            drawChevron(cx, baseY, chw, chh, th, chevColor)
-            baseY -= (chh + gap)
-        }
+        // Reference-style chevrons: bold, wide wings, tight stacking,
+        // gold uniform border. Point down (V).
+        val chw = d * 0.56f
+        val chh = d * 0.15f
+        val th = d * 0.058f
+        val gap = d * 0.028f
+        val border = d * 0.016f
+        val starH = if (elite) d * 0.22f else 0f
+        val starGap = if (elite) d * 0.04f else 0f
+        val totalH = starH + starGap + chevrons * (chh + th) + (chevrons - 1) * gap
+        var topY = cy - totalH / 2f
         // Star for Élite.
         if (elite) {
-            drawStar(cx, baseY - d * 0.02f, d * 0.11f, d * 0.045f, chevColor)
+            drawStar(cx, topY + starH / 2f, d * 0.10f, d * 0.042f, borderColor)
+            topY += starH + starGap
+        }
+        repeat(chevrons) {
+            drawChevronBordered(cx, topY, chw, chh, th, chevColor, borderColor, border)
+            topY += (chh + th + gap)
         }
     }
 }
 
-private fun DrawScope.drawChevron(
-    cx: Float, baseY: Float, w: Float, h: Float, thickness: Float, color: Color,
+/**
+ * Chevron pointing down (V), drawn as a gold border layer with the
+ * fill color on top — military uniform embroidery style.
+ */
+private fun DrawScope.drawChevronBordered(
+    cx: Float, topY: Float, w: Float, h: Float, thickness: Float,
+    fillColor: Color, borderColor: Color, border: Float,
+) {
+    drawChevronPath(
+        cx, topY - border, w + border * 2f, h + border * 2f,
+        thickness + border * 2f, borderColor,
+    )
+    drawChevronPath(cx, topY, w, h, thickness, fillColor)
+}
+
+private fun DrawScope.drawChevronPath(
+    cx: Float, topY: Float, w: Float, h: Float, thickness: Float, color: Color,
 ) {
     val path = Path().apply {
-        moveTo(cx - w / 2f, baseY)
-        lineTo(cx, baseY - h)
-        lineTo(cx + w / 2f, baseY)
-        lineTo(cx + w / 2f, baseY + thickness)
-        lineTo(cx, baseY - h + thickness)
-        lineTo(cx - w / 2f, baseY + thickness)
+        moveTo(cx - w / 2f, topY)
+        lineTo(cx, topY + h)
+        lineTo(cx + w / 2f, topY)
+        lineTo(cx + w / 2f, topY + thickness)
+        lineTo(cx, topY + h + thickness)
+        lineTo(cx - w / 2f, topY + thickness)
         close()
     }
     drawPath(path, color)
@@ -461,6 +495,85 @@ fun HorizontalDogTag(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 2.dp),
             )
+        }
+    }
+}
+
+/**
+ * Pulsing call-to-action button: taller, teal gradient, breathing glow
+ * and subtle scale pulse (infinite, never stops). The hero CTA.
+ */
+@Composable
+fun PulsingCtaButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val transition = rememberInfiniteTransition(label = "ctaPulse")
+    val scale by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.03f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "ctaScale",
+    )
+    val glow by transition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.55f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "ctaGlow",
+    )
+    val teal = Color(0xFF3FA79B)
+
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(66.dp)
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .shadow(
+                elevation = 18.dp,
+                shape = CutCornerShape(12.dp),
+                ambientColor = teal.copy(alpha = glow),
+                spotColor = teal.copy(alpha = glow),
+            ),
+        shape = CutCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        contentPadding = PaddingValues(0.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF55C9B8),
+                            teal,
+                            Color(0xFF2E7D74),
+                        ),
+                    ),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                CrosshairIcon(color = Color.Black, modifier = Modifier.size(24.dp))
+                Text(
+                    text = text,
+                    fontFamily = DangelMono,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    color = Color.Black,
+                )
+            }
         }
     }
 }
