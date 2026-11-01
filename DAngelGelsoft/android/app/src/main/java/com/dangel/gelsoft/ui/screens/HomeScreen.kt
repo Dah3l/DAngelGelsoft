@@ -150,7 +150,7 @@ fun HomeScreen(
         // ---------- Horarios ----------
         if (config.schedules.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader(title = "Horarios", onSeeAll = null)
+            SectionHeader(title = "Horario de operaciones", onSeeAll = null)
             Spacer(modifier = Modifier.height(8.dp))
             for (schedule in config.schedules) {
                 Card(
