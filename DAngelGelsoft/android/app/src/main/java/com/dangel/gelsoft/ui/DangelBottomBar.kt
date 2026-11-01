@@ -1,5 +1,5 @@
 package com.dangel.gelsoft.ui
-
+import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -67,7 +67,7 @@ fun DangelBottomBar(
                 .fillMaxWidth()
                 .shadow(12.dp, RoundedCornerShape(28.dp))
                 .clip(RoundedCornerShape(28.dp))
-                .background(Color(0xFF161616))
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
@@ -145,7 +145,7 @@ private fun BarItem(
         Icon(tab.icon, contentDescription = tab.label, tint = color, modifier = Modifier.size(24.dp))
         Text(
             tab.label,
-            fontSize = 11.sp,
+            style = DangelType.Tiny,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             color = color,
         )
