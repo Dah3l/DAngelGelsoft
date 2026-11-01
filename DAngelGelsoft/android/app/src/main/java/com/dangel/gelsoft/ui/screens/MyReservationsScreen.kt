@@ -1,4 +1,5 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.SkeletonCard
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -158,7 +159,10 @@ fun MyReservationsScreen(config: AppConfig) {
         Spacer(modifier = Modifier.height(16.dp))
 
         if (loading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            repeat(3) {
+                SkeletonCard(height = 92.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
         } else if (rows.isEmpty()) {
             Text(
                 "Aún no tienes misiones. Usa la mira central para alistarte.",
