@@ -23,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -327,18 +328,84 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    PriceRow("Bloque", "${b.name} (${b.startTime} – ${b.endTime})")
-                    PriceRow("Personas", "$personas × ${formatCup(b.price)}")
-                    Spacer(modifier = Modifier.height(6.dp))
-                    PriceRow("Total", formatCup(total), bold = true)
-                    PriceRow(
-                        "Adelanto ($adelantoPct%)",
-                        formatCup(adelanto),
-                        bold = true,
-                        highlight = true,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    // Bloque: apilado, sin apretujones.
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            "BLOQUE",
+                            fontFamily = DangelMono,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(b.name, style = DangelType.CardTitle)
+                        Text(
+                            "${b.startTime} – ${b.endTime}",
+                            fontFamily = DangelMono,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    // Personas: fila corta, lado a lado.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "Personas",
+                            style = DangelType.Body,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "$personas × ${formatCup(b.price)}",
+                            fontFamily = DangelMono,
+                            style = DangelType.Body,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                    // Total: grande y protagonista.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("TOTAL", style = DangelType.CardTitle)
+                        Text(
+                            formatCup(total),
+                            fontFamily = DangelMono,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                        )
+                    }
+                    // Adelanto: grande, en teal.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "ADELANTO ($adelantoPct%)",
+                            fontFamily = DangelMono,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            formatCup(adelanto),
+                            fontFamily = DangelMono,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                     Text(
                         "El adelanto se paga por adelantado para confirmar la reserva.",
                         style = DangelType.Tiny,
