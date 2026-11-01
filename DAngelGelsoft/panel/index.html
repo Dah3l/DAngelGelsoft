@@ -4,120 +4,238 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel — D'Angel Gelsoft</title>
-<!-- Cliente oficial de Supabase (CDN). Sin esto el panel no conecta. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  /* Tema de la marca: fondo negro, acento turquesa, texto blanco. */
   :root { --teal: #00d1c1; --bg: #000; --card: #141414; --line: #2a2a2a; --muted: #bbb; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: #fff; font-family: system-ui, sans-serif; }
-  header { padding: 20px; border-bottom: 2px solid var(--teal); }
-  header h1 { margin: 0; font-size: 24px; }
-  header p { color: var(--muted); margin: 6px 0 0; }
+  header { padding: 18px 20px 12px; border-bottom: 2px solid var(--teal); }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+  nav.pills { position: sticky; top: 0; z-index: 10; background: #0a0a0a; padding: 10px 12px; display: flex; gap: 8px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+  nav.pills button { flex: 0 0 auto; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin: 0; }
+  nav.pills button.active { background: var(--teal); color: #000; border-color: var(--teal); }
   main { max-width: 820px; margin: 0 auto; padding: 20px; }
-  .banner { background: #1c2b29; border: 1px solid var(--teal); border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; }
+  .banner { background: #1c2b29; border: 1px solid var(--teal); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px; }
   .banner b { color: var(--teal); }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-  h2 { margin: 0 0 12px; font-size: 18px; }
+  section { margin-bottom: 8px; }
+  h2 { margin: 0 0 4px; font-size: 19px; }
+  .sec-desc { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
   label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
   input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: #1e1e1e; color: #fff; font-size: 15px; }
   textarea { min-height: 70px; }
   button { background: var(--teal); color: #000; border: 0; border-radius: 8px; padding: 11px 18px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
   button.sec { background: transparent; color: #fff; border: 1px solid var(--line); }
   button.danger { background: transparent; color: #ff7b7b; border: 1px solid #552222; padding: 6px 10px; font-size: 13px; margin: 0; }
+  button.icon { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 6px 10px; font-size: 14px; margin: 0; border-radius: 8px; }
+  button.icon:hover { color: #fff; border-color: var(--teal); }
   .row { display: flex; gap: 12px; align-items: flex-end; }
   .row > div { flex: 1; }
-  .item { border-top: 1px solid var(--line); padding: 12px 0; display: flex; justify-content: space-between; gap: 12px; }
-  .item small { color: var(--muted); }
-  #estado { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-weight: bold; padding: 10px 18px; border-radius: 999px; display: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .card .title { font-weight: bold; font-size: 16px; }
+  .card .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .card .actions { display: flex; gap: 6px; flex: 0 0 auto; }
+  .card.inactive { opacity: 0.55; }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-top: 8px; cursor: pointer; }
+  .toggle input { width: auto; accent-color: var(--teal); }
+  .formbox { background: var(--card); border: 1px dashed var(--teal); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .formbox h3 { margin: 0 0 6px; font-size: 16px; color: var(--teal); }
+  .form-actions { display: flex; gap: 10px; }
+  .empty { color: var(--muted); font-size: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 12px; }
+  .dias-check { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .dias-check label { display: inline-flex; align-items: center; gap: 5px; margin: 0; font-size: 14px; color: #fff; cursor: pointer; }
+  .dias-check input { width: auto; accent-color: var(--teal); }
+  .foto-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
+  .badge { display: inline-block; font-size: 12px; font-weight: bold; padding: 3px 10px; border-radius: 999px; }
+  .badge.pendiente { background: #3a2f00; color: #ffd60a; }
+  .badge.confirmada { background: #0b3d1b; color: #4ade80; }
+  .badge.rechazada { background: #3d0b0b; color: #ff7b7b; }
+  #estado { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-weight: bold; padding: 10px 18px; border-radius: 999px; display: none; z-index: 20; max-width: 90%; text-align: center; }
   pre { background: #0d0d0d; border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
   .nota { color: var(--muted); font-size: 13px; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <header>
   <h1>Panel — D'Angel Gelsoft</h1>
-  <p>Edita el contenido de la app sin tocar código. Al guardar, la app lo muestra al instante.</p>
+  <p>Edita el contenido de la app sin tocar código. Al guardar, la app lo muestra en minutos.</p>
 </header>
+
+<nav class="pills" id="pills">
+  <button data-sec="reservas" class="active">Reservas</button>
+  <button data-sec="info">Info</button>
+  <button data-sec="horarios">Horarios</button>
+  <button data-sec="precios">Precios</button>
+  <button data-sec="avisos">Avisos</button>
+  <button data-sec="galeria">Galería</button>
+  <button data-sec="bloques">Bloques</button>
+  <button data-sec="json">JSON</button>
+</nav>
 
 <main>
   <div class="banner">
-    <b>Precios y modalidades de prueba:</b> los valores que ves abajo son
-    ejemplos para la demo. Cámbialos aquí con los reales del negocio y
-    listo: la app los muestra sola, sin actualizar la APK.
+    <b>Precios y modalidades de prueba:</b> los valores iniciales son
+    ejemplos para la demo. Cámbialos aquí con los reales del negocio:
+    la app los muestra sola, sin actualizar la APK.
   </div>
 
-  <!-- ============ INFORMACIÓN DEL NEGOCIO ============ -->
-  <section>
+  <!-- ============ INFO ============ -->
+  <section id="sec-info" hidden>
     <h2>Información del negocio</h2>
-    <label>Nombre</label>
-    <input id="info-nombre">
-    <label>Eslogan</label>
-    <input id="info-eslogan">
-    <label>Descripción</label>
-    <textarea id="info-descripcion"></textarea>
-    <label>Ubicación</label>
-    <input id="info-ubicacion">
-    <label>Instagram (sin @)</label>
-    <input id="info-instagram">
-    <div class="row">
-      <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
-      <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
+    <p class="sec-desc">Datos principales que muestra la app en la portada y en reservas.</p>
+    <div class="card">
+      <label>Nombre</label><input id="info-nombre">
+      <label>Eslogan</label><input id="info-eslogan">
+      <label>Descripción</label><textarea id="info-descripcion"></textarea>
+      <label>Ubicación</label><input id="info-ubicacion">
+      <label>Instagram (sin @)</label><input id="info-instagram">
+      <div class="row">
+        <div><label>Sitio web</label><input id="info-web" placeholder="https://..."></div>
+        <div><label>Correo</label><input id="info-correo" placeholder="contacto@..."></div>
+      </div>
+      <div class="row">
+        <div><label>Teléfono de reserva 1</label><input id="info-tel1"></div>
+        <div><label>Teléfono de reserva 2</label><input id="info-tel2"></div>
+      </div>
+      <div class="row">
+        <div><label>Adelanto % (se cobra por adelantado)</label><input id="info-adelanto" type="number" min="0" max="100" placeholder="50"></div>
+      </div>
+      <button onclick="guardarInfo()">Guardar información</button>
     </div>
-    <button onclick="guardarInfo()">Guardar información</button>
   </section>
 
   <!-- ============ HORARIOS ============ -->
-  <section>
+  <section id="sec-horarios" hidden>
     <h2>Horarios</h2>
+    <p class="sec-desc">Cada horario es una tarjeta en la app. Puedes agregar varios, editarlos y cambiar su orden.</p>
     <div id="lista-horarios"></div>
-    <label>Título</label><input id="hor-titulo" placeholder="Ej: Horario regular">
-    <div class="row">
-      <div><label>Días</label><input id="hor-dias" placeholder="Ej: Lunes a domingo"></div>
-      <div><label>Apertura</label><input id="hor-apertura" placeholder="10:00 AM"></div>
-      <div><label>Cierre</label><input id="hor-cierre" placeholder="10:00 PM"></div>
+    <button class="sec" id="btn-add-horario" onclick="toggleForm('hor')">+ Agregar horario</button>
+    <div class="formbox" id="form-hor" hidden>
+      <h3 id="form-hor-titulo">Nuevo horario</h3>
+      <label>Título</label><input id="hor-titulo" placeholder="Ej: Horario regular">
+      <div class="row">
+        <div><label>Días</label><input id="hor-dias" placeholder="Ej: Lunes a domingo"></div>
+        <div><label>Apertura</label><input id="hor-apertura" placeholder="10:00 AM"></div>
+        <div><label>Cierre</label><input id="hor-cierre" placeholder="10:00 PM"></div>
+      </div>
+      <label>Nota</label><input id="hor-nota" placeholder="Ej: Abierto todos los días.">
+      <div class="form-actions">
+        <button id="btn-save-hor" onclick="guardarHorario()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('hor')">Cancelar</button>
+      </div>
     </div>
-    <label>Nota</label><input id="hor-nota" placeholder="Ej: Abierto todos los días.">
-    <button onclick="agregarHorario()">Agregar horario</button>
   </section>
 
   <!-- ============ PRECIOS ============ -->
-  <section>
+  <section id="sec-precios" hidden>
     <h2>Precios y modalidades</h2>
+    <p class="sec-desc">Cada modalidad es una tarjeta en la app. Puedes agregar varias, editarlas y cambiar su orden.</p>
     <div id="lista-precios"></div>
-    <label>Modalidad</label><input id="pre-nombre" placeholder="Ej: Sesión de día">
-    <label>Descripción</label><input id="pre-desc" placeholder="Ej: Partida diurna, incluye equipo.">
-    <div class="row">
-      <div><label>Precio (CUP)</label><input id="pre-precio" type="number" placeholder="500"></div>
-      <div><label>Unidad</label><input id="pre-unidad" value="por persona"></div>
+    <button class="sec" id="btn-add-precio" onclick="toggleForm('pre')">+ Agregar precio</button>
+    <div class="formbox" id="form-pre" hidden>
+      <h3 id="form-pre-titulo">Nuevo precio</h3>
+      <label>Modalidad</label><input id="pre-nombre" placeholder="Ej: Sesión de día">
+      <label>Descripción</label><input id="pre-desc" placeholder="Ej: Partida diurna, incluye equipo.">
+      <div class="row">
+        <div><label>Precio (CUP)</label><input id="pre-precio" type="number" placeholder="500"></div>
+        <div><label>Unidad</label><input id="pre-unidad" value="por persona"></div>
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-pre" onclick="guardarPrecio()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('pre')">Cancelar</button>
+      </div>
     </div>
-    <button onclick="agregarPrecio()">Agregar precio</button>
   </section>
 
   <!-- ============ AVISOS ============ -->
-  <section>
+  <section id="sec-avisos" hidden>
     <h2>Avisos y noches especiales</h2>
+    <p class="sec-desc">Solo los avisos <b>activos</b> salen en la app. Puedes desactivar uno sin borrarlo.</p>
     <div id="lista-anuncios"></div>
-    <label>Título</label><input id="anu-titulo" placeholder="Ej: Noche especial de gelsoft">
-    <label>Texto</label><textarea id="anu-texto"></textarea>
-    <label>Etiqueta de fecha</label><input id="anu-fecha" placeholder="Ej: Viernes">
-    <button onclick="agregarAnuncio()">Agregar aviso</button>
+    <button class="sec" id="btn-add-anu" onclick="toggleForm('anu')">+ Agregar aviso</button>
+    <div class="formbox" id="form-anu" hidden>
+      <h3 id="form-anu-titulo">Nuevo aviso</h3>
+      <label>Título</label><input id="anu-titulo" placeholder="Ej: Noche especial de gelsoft">
+      <label>Texto</label><textarea id="anu-texto"></textarea>
+      <label>Etiqueta de fecha</label><input id="anu-fecha" placeholder="Ej: Viernes">
+      <div class="form-actions">
+        <button id="btn-save-anu" onclick="guardarAviso()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('anu')">Cancelar</button>
+      </div>
+    </div>
   </section>
 
-  <!-- ============ VER EL JSON ============ -->
-  <section>
+  <!-- ============ GALERÍA ============ -->
+  <section id="sec-galeria" hidden>
+    <h2>Galería</h2>
+    <p class="sec-desc">Secciones (Armas, Eventos, Clientes...) y sus fotos. Las fotos se suben al bucket y la app las muestra solas.</p>
+    <div id="lista-secciones"></div>
+    <button class="sec" onclick="toggleForm('sec')">+ Agregar sección</button>
+    <div class="formbox" id="form-sec" hidden>
+      <h3>Nueva sección</h3>
+      <label>Nombre</label><input id="sec-nombre" placeholder="Ej: Armas">
+      <div class="form-actions">
+        <button onclick="guardarSeccion()">Agregar</button>
+        <button class="sec" onclick="document.getElementById('form-sec').hidden=true">Cancelar</button>
+      </div>
+    </div>
+    <div id="fotos-seccion"></div>
+  </section>
+
+  <!-- ============ BLOQUES ============ -->
+  <section id="sec-bloques" hidden>
+    <h2>Bloques de reserva</h2>
+    <p class="sec-desc">Turnos de juego. Cada bloque define en qué días aplica; la app solo ofrece los libres.</p>
+    <div id="lista-bloques"></div>
+    <button class="sec" onclick="toggleForm('blq')">+ Agregar bloque</button>
+    <div class="formbox" id="form-blq" hidden>
+      <h3 id="form-blq-titulo">Nuevo bloque</h3>
+      <label>Nombre</label><input id="blq-nombre" placeholder="Ej: Mañana">
+      <div class="row">
+        <div><label>Hora inicio</label><input id="blq-inicio" placeholder="10:00 AM"></div>
+        <div><label>Hora fin</label><input id="blq-fin" placeholder="1:00 PM"></div>
+      </div>
+      <div class="row">
+        <div><label>Precio por persona (CUP)</label><input id="blq-precio" type="number" min="0" placeholder="500"></div>
+      </div>
+      <label>Días que aplica</label>
+      <div id="blq-dias" class="dias-check">
+        <label><input type="checkbox" value="1" checked> Lun</label>
+        <label><input type="checkbox" value="2" checked> Mar</label>
+        <label><input type="checkbox" value="3" checked> Mié</label>
+        <label><input type="checkbox" value="4" checked> Jue</label>
+        <label><input type="checkbox" value="5" checked> Vie</label>
+        <label><input type="checkbox" value="6" checked> Sáb</label>
+        <label><input type="checkbox" value="7"> Dom</label>
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-blq" onclick="guardarBloque()">Agregar</button>
+        <button class="sec" onclick="cancelarEdicion('blq')">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESERVAS ============ -->
+  <section id="sec-reservas">
+    <h2>Reservas</h2>
+    <p class="sec-desc">Solicitudes de los clientes. Acepta o rechaza; al decidir, avisa al cliente por WhatsApp con un toque.</p>
+    <div class="row" style="margin-bottom:12px">
+      <button class="sec" id="filtro-pendientes" onclick="setFiltroReservas('pendiente')">Pendientes</button>
+      <button class="sec" id="filtro-todas" onclick="setFiltroReservas('todas')">Todas</button>
+    </div>
+    <div id="lista-reservas"></div>
+  </section>
+
+  <!-- ============ JSON ============ -->
+  <section id="sec-json" hidden>
     <h2>El JSON que recibe la app</h2>
-    <p class="nota">Esto es exactamente lo que sirve la Edge Function y lee la APK.</p>
+    <p class="sec-desc">Esto es exactamente lo que lee la APK desde GitHub Pages. Cada cambio que guardas dispara la sincronización al instante (tarda ~1-2 min en verse en la app).</p>
     <button class="sec" onclick="verJson()">Ver JSON actual</button>
+    <button class="sec" onclick="cambiarToken()">Cambiar token de GitHub</button>
     <pre id="salida-json">Pulsa el botón para cargar el JSON…</pre>
+    <p class="nota">Nota de seguridad (demo): este panel escribe con la anon key para no obligar al administrador a crear cuentas. Antes de publicar, activa Supabase Auth y limita la escritura al admin.</p>
   </section>
-
-  <p class="nota">
-    Nota de seguridad (demo): este panel escribe con la anon key para no
-    obligar al administrador a crear cuentas. Antes de publicar, activa
-    Supabase Auth y cambia las políticas de escritura para que solo el
-    admin autenticado pueda modificar (ver `supabase/schema.sql`).
-  </p>
 </main>
 
 <div id="estado"></div>
@@ -125,16 +243,111 @@
 <script>
   // ============================================================
   // CONFIGURACIÓN — rellenar con los datos del proyecto Supabase.
-  //   1. Crea el proyecto en supabase.com
-  //   2. Corre supabase/schema.sql y supabase/seed.sql en el editor SQL
-  //   3. Despliega la función: supabase functions deploy app-config
-  //   4. Copia aquí la URL y la anon key (Project Settings → API)
   // ============================================================
-  const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
-  const SUPABASE_ANON_KEY = "TU-ANON-KEY";
-  const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/app-config";
+  const SUPABASE_URL = "https://cxkacnymioovvhvwqlsj.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4a2FjbnltaW9vdnZodndxbHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMjI2ODEsImV4cCI6MjEwODg5ODY4MX0.shNDQbIqO3qPU2bngrD6SyC49gCfv84jJYjz7uYBTyc";
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ===== Sincronización instantánea: el panel dispara el workflow ===== */
+const GH_REPO = "Dah3l/DAngelGelsoft";
+const GH_WORKFLOW = "syncSupabase.yml";
+const SYNC_DEBOUNCE_MS = 45000; // no disparar más de 1 vez cada 45 s
+
+function ghToken() { return localStorage.getItem("gh_pat") || ""; }
+
+function pedirToken() {
+  const t = prompt(
+    "Sincronización instantánea (solo la primera vez):\n\n" +
+    "1. GitHub → tu foto → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.\n" +
+    "2. Repository access: Only select repositories → DAngelGelsoft.\n" +
+    "3. Permissions: Actions → Read and write → Generate token.\n" +
+    "4. Pega el token aquí (empieza con github_pat_). Se guarda SOLO en este navegador, nunca en el repo.\n\n" +
+    "Si prefieres no usarlo, cancela: se usará el método tradicional (sincronización programada/manual)."
+  );
+  if (t && t.trim()) { localStorage.setItem("gh_pat", t.trim()); return t.trim(); }
+  return "";
+}
+
+function dispararSync() {
+  let token = ghToken();
+  if (!token) {
+    if (localStorage.getItem("gh_pat_skip") === "1") return; // prefirió el método tradicional
+    token = pedirToken();
+    if (!token) {
+      localStorage.setItem("gh_pat_skip", "1"); // no volver a preguntar
+      return;
+    }
+  }
+  const ahora = Date.now();
+  if (ahora - (window._ultimoSync || 0) < SYNC_DEBOUNCE_MS) return;
+  window._ultimoSync = ahora;
+  aviso("Sincronizando la app…");
+  fetch("https://api.github.com/repos/" + GH_REPO + "/actions/workflows/" + GH_WORKFLOW + "/dispatches", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Accept": "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ref: "main" }),
+  }).then(r => {
+    if (r.status === 401 || r.status === 403) {
+      localStorage.removeItem("gh_pat");
+      aviso("Token de GitHub inválido o sin permiso. Se pedirá de nuevo al guardar.");
+    } else if (!r.ok) {
+      aviso("No se pudo disparar la sincronización (HTTP " + r.status + ").");
+    }
+    /* 204 = disparado. El JSON tarda ~1-2 min (workflow + Pages). */
+  }).catch(() => aviso("Sin conexión con GitHub para sincronizar."));
+}
+
+function cambiarToken() {
+  localStorage.removeItem("gh_pat");
+  localStorage.removeItem("gh_pat_skip");
+  if (pedirToken()) aviso("Token actualizado ✓");
+}
+  // El JSON que lee la app (GitHub Pages, modelo Aguacero). Si el panel
+  // se abre desde su propia URL en Pages, se deriva solo.
+  const JSON_URL = (location.protocol.startsWith("http"))
+    ? new URL("app-config.json", location.href).href
+    : "https://dah3l.github.io/DAngelGelsoft/app-config.json";
+
+  // ---------- Cliente REST directo (sin CDN ni dependencias) ----------
+  async function sb(method, path, body) {
+    const res = await fetch(SUPABASE_URL + "/rest/v1" + path, {
+      method,
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation,resolution=merge-duplicates",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) {}
+    if (!res.ok) throw new Error((data && data.message) || ("HTTP " + res.status));
+    if (method !== "GET") dispararSync(); // cambio instantáneo, sin esperar al timer
+    return data;
+  }
+
+  const SIN_LLAVES = SUPABASE_URL.includes("TU-PROYECTO") || SUPABASE_ANON_KEY.includes("TU-ANON");
+
+  // Siguiente valor de `orden` para una tabla (los nuevos van al final).
+  async function siguienteOrden(tabla) {
+    const rows = await sb("GET", "/" + tabla + "?select=orden&order=orden.desc&limit=1");
+    return ((rows[0] && rows[0].orden) || 0) + 1;
+  }
+
+  // ---------- Navegación por pills ----------
+  document.getElementById("pills").addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document.querySelectorAll("#pills button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("main > section").forEach(s => s.hidden = true);
+    document.getElementById("sec-" + btn.dataset.sec).hidden = false;
+  });
 
   function aviso(texto) {
     const el = document.getElementById("estado");
@@ -150,16 +363,19 @@
 
   // ---------------- Información del negocio ----------------
   async function cargarInfo() {
-    const { data, error } = await supabase
-      .from("business_info").select("*").eq("id", 1).maybeSingle();
-    if (error || !data) return;
+    const rows = await sb("GET", "/business_info?select=*&id=eq.1");
+    const data = rows[0];
+    if (!data) return;
     document.getElementById("info-nombre").value = data.nombre || "";
     document.getElementById("info-eslogan").value = data.eslogan || "";
     document.getElementById("info-descripcion").value = data.descripcion || "";
     document.getElementById("info-ubicacion").value = data.ubicacion || "";
     document.getElementById("info-instagram").value = data.instagram || "";
+    document.getElementById("info-web").value = data.sitio_web || "";
+    document.getElementById("info-correo").value = data.correo || "";
     document.getElementById("info-tel1").value = data.telefono_reserva_1 || "";
     document.getElementById("info-tel2").value = data.telefono_reserva_2 || "";
+    document.getElementById("info-adelanto").value = data.adelanto_pct ?? 50;
   }
 
   async function guardarInfo() {
@@ -170,41 +386,152 @@
       descripcion: document.getElementById("info-descripcion").value.trim(),
       ubicacion: document.getElementById("info-ubicacion").value.trim(),
       instagram: document.getElementById("info-instagram").value.trim(),
+      sitio_web: document.getElementById("info-web").value.trim(),
+      correo: document.getElementById("info-correo").value.trim(),
       telefono_reserva_1: document.getElementById("info-tel1").value.trim(),
       telefono_reserva_2: document.getElementById("info-tel2").value.trim(),
+      adelanto_pct: parseInt(document.getElementById("info-adelanto").value) || 0,
     };
-    const { error } = await supabase.from("business_info").upsert(fila);
-    aviso(error ? "Error al guardar: " + error.message : "Información guardada ✓");
+    try {
+      await sb("POST", "/business_info", fila);
+      aviso("Información guardada ✓");
+    } catch (e) { aviso("Error al guardar: " + e.message); }
   }
 
-  // ---------------- Listas genéricas (horarios, precios, avisos) ----------------
+  // ---------------- Listas: cargar + pintar ----------------
+  let editando = { seccion: null, id: null };
+
   async function cargarListas() {
-    const [hor, pre, anu] = await Promise.all([
-      supabase.from("schedules").select("*").order("orden"),
-      supabase.from("prices").select("*").order("orden"),
-      supabase.from("announcements").select("*").order("orden"),
-    ]);
-    document.getElementById("lista-horarios").innerHTML = (hor.data || []).map((h) =>
-      `<div class="item"><div><b>${escapeHtml(h.titulo)}</b><br><small>${escapeHtml(h.dias)} · ${escapeHtml(h.apertura)} – ${escapeHtml(h.cierre)}${h.nota ? " · " + escapeHtml(h.nota) : ""}</small></div><button class="danger" onclick="borrar('schedules', ${h.id})">Borrar</button></div>`
-    ).join("") || "<p class='nota'>Sin horarios todavía.</p>";
-
-    document.getElementById("lista-precios").innerHTML = (pre.data || []).map((p) =>
-      `<div class="item"><div><b>${escapeHtml(p.nombre)}</b><br><small>${p.precio_cup} CUP ${escapeHtml(p.unidad)}${p.descripcion ? " · " + escapeHtml(p.descripcion) : ""}</small></div><button class="danger" onclick="borrar('prices', ${p.id})">Borrar</button></div>`
-    ).join("") || "<p class='nota'>Sin precios todavía.</p>";
-
-    document.getElementById("lista-anuncios").innerHTML = (anu.data || []).map((a) =>
-      `<div class="item"><div><b>${escapeHtml(a.titulo)}</b> <small>(${escapeHtml(a.fecha)}) ${a.activo ? "" : "· inactivo"}</small><br><small>${escapeHtml(a.texto)}</small></div><button class="danger" onclick="borrar('announcements', ${a.id})">Borrar</button></div>`
-    ).join("") || "<p class='nota'>Sin avisos todavía.</p>";
+    try {
+      const [hor, pre, anu] = await Promise.all([
+        sb("GET", "/schedules?select=*&order=orden.asc"),
+        sb("GET", "/prices?select=*&order=orden.asc"),
+        sb("GET", "/announcements?select=*&order=orden.asc"),
+      ]);
+      pintarHorarios(hor || []);
+      pintarPrecios(pre || []);
+      pintarAvisos(anu || []);
+    } catch (e) {
+      aviso("No se pudo cargar: " + e.message);
+    }
   }
 
-  async function borrar(tabla, id) {
-    if (!confirm("¿Borrar este registro?")) return;
-    const { error } = await supabase.from(tabla).delete().eq("id", id);
-    aviso(error ? "Error: " + error.message : "Borrado ✓");
-    cargarListas();
+  function acciones(tabla, sec, id) {
+    return `<div class="actions">
+      <button class="icon" title="Editar" onclick="empezarEdicion('${sec}', ${id})">✏️</button>
+      <button class="icon" title="Subir" onclick="mover('${tabla}', ${id}, -1)">↑</button>
+      <button class="icon" title="Bajar" onclick="mover('${tabla}', ${id}, 1)">↓</button>
+      <button class="danger" title="Borrar" onclick="borrar('${tabla}', ${id})">🗑</button>
+    </div>`;
   }
 
-  async function agregarHorario() {
+  function pintarHorarios(items) {
+    const el = document.getElementById("lista-horarios");
+    el.innerHTML = items.map((h) => `
+      <div class="card"><div class="top">
+        <div><div class="title">${escapeHtml(h.titulo)}</div>
+        <div class="sub">${escapeHtml(h.dias)} · ${escapeHtml(h.apertura)} – ${escapeHtml(h.cierre)}${h.nota ? " · " + escapeHtml(h.nota) : ""}</div></div>
+        ${acciones("schedules", "hor", h.id)}
+      </div></div>`).join("")
+      || `<div class="empty">Sin horarios todavía. Agrega el primero con el botón de abajo.</div>`;
+  }
+
+  function pintarPrecios(items) {
+    const el = document.getElementById("lista-precios");
+    el.innerHTML = items.map((p) => `
+      <div class="card"><div class="top">
+        <div><div class="title">${escapeHtml(p.nombre)} — ${p.precio_cup} CUP</div>
+        <div class="sub">${escapeHtml(p.unidad)}${p.descripcion ? " · " + escapeHtml(p.descripcion) : ""}</div></div>
+        ${acciones("prices", "pre", p.id)}
+      </div></div>`).join("")
+      || `<div class="empty">Sin precios todavía. Agrega el primero con el botón de abajo.</div>`;
+  }
+
+  function pintarAvisos(items) {
+    const el = document.getElementById("lista-anuncios");
+    el.innerHTML = items.map((a) => `
+      <div class="card${a.activo ? "" : " inactive"}"><div class="top">
+        <div><div class="title">${escapeHtml(a.titulo)}</div>
+        <div class="sub">${escapeHtml(a.fecha)}${a.activo ? "" : " · inactivo"}<br>${escapeHtml(a.texto)}</div>
+        <label class="toggle"><input type="checkbox" ${a.activo ? "checked" : ""} onchange="toggleAviso(${a.id}, this.checked)"> Visible en la app</label></div>
+        ${acciones("announcements", "anu", a.id)}
+      </div></div>`).join("")
+      || `<div class="empty">Sin avisos todavía. Agrega el primero con el botón de abajo.</div>`;
+  }
+
+  // ---------------- Formularios: mostrar / editar / cancelar ----------------
+  function toggleForm(sec) {
+    const form = document.getElementById("form-" + sec);
+    form.hidden = !form.hidden;
+    if (!form.hidden) {
+      editando = { seccion: null, id: null };
+      if (sec === "blq") {
+        editandoBloque = null;
+        limpiarForm("blq");
+        document.getElementById("form-blq-titulo").textContent = "Nuevo bloque";
+        document.getElementById("btn-save-blq").textContent = "Agregar";
+      }
+    }
+  }
+
+  function limpiarForm(sec) {
+    const ids = {
+      hor: ["hor-titulo", "hor-dias", "hor-apertura", "hor-cierre", "hor-nota"],
+      pre: ["pre-nombre", "pre-desc", "pre-precio", "pre-unidad"],
+      anu: ["anu-titulo", "anu-texto", "anu-fecha"],
+      blq: ["blq-nombre", "blq-inicio", "blq-fin", "blq-precio"],
+    }[sec];
+    if (!ids) return;
+    ids.forEach(id => document.getElementById(id).value = id === "pre-unidad" ? "por persona" : "");
+    if (sec === "blq") {
+      document.querySelectorAll("#blq-dias input").forEach(c => c.checked = c.value !== "7");
+    }
+  }
+
+  function cancelarEdicion(sec) {
+    document.getElementById("form-" + sec).hidden = true;
+    limpiarForm(sec);
+    editando = { seccion: null, id: null };
+    if (sec === "blq") { editandoBloque = null; return; }
+    const titulos = { hor: "Nuevo horario", pre: "Nuevo precio", anu: "Nuevo aviso" };
+    const botones = { hor: "Agregar", pre: "Agregar", anu: "Agregar" };
+    document.getElementById("form-" + sec + "-titulo").textContent = titulos[sec];
+    document.getElementById("btn-save-" + sec).textContent = botones[sec];
+  }
+
+  async function empezarEdicion(sec, id) {
+    const tablas = { hor: "schedules", pre: "prices", anu: "announcements" };
+    let data;
+    try {
+      const rows = await sb("GET", "/" + tablas[sec] + "?select=*&id=eq." + id);
+      data = rows[0];
+    } catch (e) { data = null; }
+    if (!data) return aviso("No se pudo cargar el registro.");
+    if (sec === "hor") {
+      document.getElementById("hor-titulo").value = data.titulo || "";
+      document.getElementById("hor-dias").value = data.dias || "";
+      document.getElementById("hor-apertura").value = data.apertura || "";
+      document.getElementById("hor-cierre").value = data.cierre || "";
+      document.getElementById("hor-nota").value = data.nota || "";
+    } else if (sec === "pre") {
+      document.getElementById("pre-nombre").value = data.nombre || "";
+      document.getElementById("pre-desc").value = data.descripcion || "";
+      document.getElementById("pre-precio").value = data.precio_cup ?? "";
+      document.getElementById("pre-unidad").value = data.unidad || "por persona";
+    } else {
+      document.getElementById("anu-titulo").value = data.titulo || "";
+      document.getElementById("anu-texto").value = data.texto || "";
+      document.getElementById("anu-fecha").value = data.fecha || "";
+    }
+    editando = { seccion: sec, id };
+    document.getElementById("form-" + sec).hidden = false;
+    document.getElementById("form-" + sec + "-titulo").textContent = "Editar";
+    document.getElementById("btn-save-" + sec).textContent = "Guardar cambios";
+    document.getElementById("form-" + sec).scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // ---------------- Guardar (nuevo o edición) ----------------
+  async function guardarHorario() {
     const fila = {
       titulo: document.getElementById("hor-titulo").value.trim(),
       dias: document.getElementById("hor-dias").value.trim(),
@@ -213,12 +540,18 @@
       nota: document.getElementById("hor-nota").value.trim(),
     };
     if (!fila.titulo) return aviso("Escribe al menos el título.");
-    const { error } = await supabase.from("schedules").insert(fila);
-    aviso(error ? "Error: " + error.message : "Horario agregado ✓");
-    cargarListas();
+    try {
+      if (editando.seccion === "hor" && editando.id) {
+        await sb("PATCH", "/schedules?id=eq." + editando.id, fila);
+      } else {
+        await sb("POST", "/schedules", { ...fila, orden: await siguienteOrden("schedules") });
+      }
+      aviso("Horario guardado ✓");
+      cancelarEdicion("hor"); cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
-  async function agregarPrecio() {
+  async function guardarPrecio() {
     const fila = {
       nombre: document.getElementById("pre-nombre").value.trim(),
       descripcion: document.getElementById("pre-desc").value.trim(),
@@ -226,22 +559,387 @@
       unidad: document.getElementById("pre-unidad").value.trim() || "por persona",
     };
     if (!fila.nombre) return aviso("Escribe al menos la modalidad.");
-    const { error } = await supabase.from("prices").insert(fila);
-    aviso(error ? "Error: " + error.message : "Precio agregado ✓");
-    cargarListas();
+    try {
+      if (editando.seccion === "pre" && editando.id) {
+        await sb("PATCH", "/prices?id=eq." + editando.id, fila);
+      } else {
+        await sb("POST", "/prices", { ...fila, orden: await siguienteOrden("prices") });
+      }
+      aviso("Precio guardado ✓");
+      cancelarEdicion("pre"); cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
-  async function agregarAnuncio() {
+  async function guardarAviso() {
     const fila = {
       titulo: document.getElementById("anu-titulo").value.trim(),
       texto: document.getElementById("anu-texto").value.trim(),
       fecha: document.getElementById("anu-fecha").value.trim(),
-      activo: true,
     };
     if (!fila.titulo) return aviso("Escribe al menos el título.");
-    const { error } = await supabase.from("announcements").insert(fila);
-    aviso(error ? "Error: " + error.message : "Aviso agregado ✓");
+    try {
+      if (editando.seccion === "anu" && editando.id) {
+        await sb("PATCH", "/announcements?id=eq." + editando.id, fila);
+      } else {
+        await sb("POST", "/announcements", { ...fila, activo: true, orden: await siguienteOrden("announcements") });
+      }
+      aviso("Aviso guardado ✓");
+      cancelarEdicion("anu"); cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  // ---------------- Borrar / mover / toggle ----------------
+  async function borrar(tabla, id) {
+    if (!confirm("¿Borrar este registro?")) return;
+    try {
+      await sb("DELETE", "/" + tabla + "?id=eq." + id);
+      aviso("Borrado ✓");
+    } catch (e) { aviso("Error: " + e.message); }
     cargarListas();
+  }
+
+  async function mover(tabla, id, dir) {
+    try {
+      const data = await sb("GET", "/" + tabla + "?select=id,orden&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      const a = data[i], b = data[j];
+      await sb("PATCH", "/" + tabla + "?id=eq." + a.id, { orden: b.orden });
+      await sb("PATCH", "/" + tabla + "?id=eq." + b.id, { orden: a.orden });
+      cargarListas();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function toggleAviso(id, activo) {
+    try {
+      await sb("PATCH", "/announcements?id=eq." + id, { activo });
+      aviso(activo ? "Aviso visible ✓" : "Aviso oculto ✓");
+    } catch (e) { aviso("Error: " + e.message); }
+    cargarListas();
+  }
+
+  // ---------------- Galería ----------------
+  let seccionActiva = null;
+
+  async function cargarGaleria() {
+    try {
+      const [secs, fotos] = await Promise.all([
+        sb("GET", "/gallery_sections?select=*&order=orden.asc"),
+        sb("GET", "/gallery_photos?select=*&order=orden.asc"),
+      ]);
+      const porSec = {};
+      (fotos || []).forEach(f => { (porSec[f.section_id] = porSec[f.section_id] || []).push(f); });
+      const el = document.getElementById("lista-secciones");
+      el.innerHTML = (secs || []).map(s => `
+        <div class="card"><div class="top">
+          <div><div class="title">${escapeHtml(s.nombre)}</div>
+          <div class="sub">${(porSec[s.id] || []).length} fotos</div></div>
+          <div class="actions">
+            <button class="icon" title="Ver fotos" onclick="verFotos(${s.id}, '${escapeHtml(s.nombre).replace(/'/g, "\\'")}')">🖼</button>
+            <button class="icon" title="Subir" onclick="moverSeccion(${s.id}, -1)">↑</button>
+            <button class="icon" title="Bajar" onclick="moverSeccion(${s.id}, 1)">↓</button>
+            <button class="danger" title="Borrar" onclick="borrarSeccion(${s.id})">🗑</button>
+          </div>
+        </div></div>`).join("")
+        || `<div class="empty">Sin secciones todavía.</div>`;
+      if (seccionActiva) verFotos(seccionActiva.id, seccionActiva.nombre, porSec);
+    } catch (e) { aviso("No se pudo cargar la galería: " + e.message); }
+  }
+
+  async function guardarSeccion() {
+    const nombre = document.getElementById("sec-nombre").value.trim();
+    if (!nombre) return aviso("Escribe el nombre de la sección.");
+    try {
+      await sb("POST", "/gallery_sections", { nombre, orden: await siguienteOrden("gallery_sections") });
+      document.getElementById("sec-nombre").value = "";
+      document.getElementById("form-sec").hidden = true;
+      aviso("Sección agregada ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function borrarSeccion(id) {
+    if (!confirm("¿Borrar la sección y todas sus fotos?")) return;
+    try {
+      await sb("DELETE", "/gallery_sections?id=eq." + id);
+      if (seccionActiva && seccionActiva.id === id) {
+        seccionActiva = null;
+        document.getElementById("fotos-seccion").innerHTML = "";
+      }
+      aviso("Sección borrada ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function moverSeccion(id, dir) {
+    try {
+      const data = await sb("GET", "/gallery_sections?select=id,orden&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      await sb("PATCH", "/gallery_sections?id=eq." + data[i].id, { orden: data[j].orden });
+      await sb("PATCH", "/gallery_sections?id=eq." + data[j].id, { orden: data[i].orden });
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function verFotos(sectionId, nombre, porSec) {
+    seccionActiva = { id: sectionId, nombre };
+    let fotos = porSec;
+    if (!fotos) {
+      try {
+        fotos = await sb("GET", "/gallery_photos?select=*&section_id=eq." + sectionId + "&order=orden.asc");
+      } catch (e) { return aviso("Error: " + e.message); }
+    } else {
+      fotos = (fotos[sectionId] || []);
+    }
+    const el = document.getElementById("fotos-seccion");
+    el.innerHTML = `<h3 style="margin:16px 0 8px">Fotos — ${escapeHtml(nombre)}</h3>` +
+      `<label class="toggle" style="margin-bottom:12px">📤 Subir foto: <input type="file" id="input-foto" accept="image/*" onchange="subirFoto(this)"></label>` +
+      (fotos.map(f => `
+        <div class="card"><div class="top">
+          <img class="foto-thumb" src="${escapeHtml(f.url)}" alt="">
+          <div style="flex:1"><div class="sub">${escapeHtml(f.titulo || "Sin título")}</div></div>
+          <div class="actions">
+            <button class="icon" title="Subir" onclick="moverFoto(${f.id}, -1)">↑</button>
+            <button class="icon" title="Bajar" onclick="moverFoto(${f.id}, 1)">↓</button>
+            <button class="danger" title="Borrar" onclick="borrarFoto(${f.id})">🗑</button>
+          </div>
+        </div></div>`).join("")
+      || `<div class="empty">Sin fotos en esta sección.</div>`);
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function subirFoto(input) {
+    const file = input.files[0];
+    if (!file || !seccionActiva) return;
+    aviso("Subiendo foto…");
+    try {
+      const nombre = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+      const res = await fetch(SUPABASE_URL + "/storage/v1/object/galeria/" + nombre, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+          "Content-Type": file.type || "image/jpeg",
+        },
+        body: file,
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const url = SUPABASE_URL + "/storage/v1/object/public/galeria/" + nombre;
+      await sb("POST", "/gallery_photos", {
+        section_id: seccionActiva.id, url, titulo: file.name, orden: await siguienteOrden("gallery_photos"),
+      });
+      aviso("Foto subida ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error al subir: " + e.message); }
+  }
+
+  async function borrarFoto(id) {
+    if (!confirm("¿Borrar esta foto?")) return;
+    try {
+      await sb("DELETE", "/gallery_photos?id=eq." + id);
+      aviso("Foto borrada ✓");
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function moverFoto(id, dir) {
+    try {
+      const data = await sb("GET", "/gallery_photos?select=id,orden&section_id=eq." + seccionActiva.id + "&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      await sb("PATCH", "/gallery_photos?id=eq." + data[i].id, { orden: data[j].orden });
+      await sb("PATCH", "/gallery_photos?id=eq." + data[j].id, { orden: data[i].orden });
+      cargarGaleria();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  // ---------------- Bloques de reserva ----------------
+  const DIAS_NOMBRE = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 7: "Dom" };
+  let editandoBloque = null;
+
+  function diasTexto(dias) {
+    return String(dias || "").split(",").map(d => DIAS_NOMBRE[d.trim()] || d.trim()).join(" ");
+  }
+
+  async function cargarBloques() {
+    try {
+      const data = await sb("GET", "/bloques?select=*&order=orden.asc");
+      document.getElementById("lista-bloques").innerHTML = (data || []).map(b => `
+        <div class="card"><div class="top">
+          <div><div class="title">${escapeHtml(b.nombre)} — ${b.precio || 0} CUP / persona</div>
+          <div class="sub">${escapeHtml(b.hora_inicio)} – ${escapeHtml(b.hora_fin)} · ${diasTexto(b.dias)}</div></div>
+          <div class="actions">
+            <button class="icon" title="Editar" onclick="empezarEdicionBloque(${b.id})">✏️</button>
+            <button class="icon" title="Subir" onclick="moverBloque(${b.id}, -1)">↑</button>
+            <button class="icon" title="Bajar" onclick="moverBloque(${b.id}, 1)">↓</button>
+            <button class="danger" title="Borrar" onclick="borrarBloque(${b.id})">🗑</button>
+          </div>
+        </div></div>`).join("")
+        || `<div class="empty">Sin bloques todavía.</div>`;
+    } catch (e) { aviso("No se pudieron cargar los bloques: " + e.message); }
+  }
+
+  function leerDiasCheck() {
+    return [...document.querySelectorAll("#blq-dias input:checked")].map(c => c.value).join(",");
+  }
+
+  async function guardarBloque() {
+    const fila = {
+      nombre: document.getElementById("blq-nombre").value.trim(),
+      hora_inicio: document.getElementById("blq-inicio").value.trim(),
+      hora_fin: document.getElementById("blq-fin").value.trim(),
+      dias: leerDiasCheck(),
+      precio: parseFloat(document.getElementById("blq-precio").value) || 0,
+    };
+    if (!fila.nombre) return aviso("Escribe el nombre del bloque.");
+    try {
+      if (editandoBloque) {
+        await sb("PATCH", "/bloques?id=eq." + editandoBloque, fila);
+      } else {
+        await sb("POST", "/bloques", { ...fila, orden: await siguienteOrden("bloques") });
+      }
+      aviso("Bloque guardado ✓");
+      cancelarEdicion("blq");
+      editandoBloque = null;
+      document.getElementById("form-blq-titulo").textContent = "Nuevo bloque";
+      document.getElementById("btn-save-blq").textContent = "Agregar";
+      cargarBloques();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function empezarEdicionBloque(id) {
+    try {
+      const rows = await sb("GET", "/bloques?select=*&id=eq." + id);
+      const b = rows[0];
+      if (!b) return;
+      document.getElementById("blq-nombre").value = b.nombre || "";
+      document.getElementById("blq-inicio").value = b.hora_inicio || "";
+      document.getElementById("blq-fin").value = b.hora_fin || "";
+      document.getElementById("blq-precio").value = b.precio || 0;
+      const dias = String(b.dias || "").split(",").map(d => d.trim());
+      document.querySelectorAll("#blq-dias input").forEach(c => c.checked = dias.includes(c.value));
+      editandoBloque = id;
+      document.getElementById("form-blq").hidden = false;
+      document.getElementById("form-blq-titulo").textContent = "Editar bloque";
+      document.getElementById("btn-save-blq").textContent = "Guardar cambios";
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function borrarBloque(id) {
+    if (!confirm("¿Borrar este bloque? (Se borran también sus reservas.)")) return;
+    try {
+      await sb("DELETE", "/bloques?id=eq." + id);
+      aviso("Bloque borrado ✓");
+      cargarBloques();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  async function moverBloque(id, dir) {
+    try {
+      const data = await sb("GET", "/bloques?select=id,orden&order=orden.asc");
+      const i = data.findIndex(r => r.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= data.length) return;
+      await sb("PATCH", "/bloques?id=eq." + data[i].id, { orden: data[j].orden });
+      await sb("PATCH", "/bloques?id=eq." + data[j].id, { orden: data[i].orden });
+      cargarBloques();
+    } catch (e) { aviso("Error: " + e.message); }
+  }
+
+  // ---------------- Reservas ----------------
+  let filtroReservas = "pendiente";
+  let reservasCache = [];
+  const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+  function setFiltroReservas(f) {
+    filtroReservas = f;
+    cargarReservas();
+  }
+
+  // "2026-11-01" -> "1. Nov. 2026" (mismo formato que la app y WhatsApp).
+  function fechaCorta(f) {
+    const p = String(f || "").split("-");
+    if (p.length !== 3) return f;
+    const m = MESES[parseInt(p[1], 10) - 1];
+    if (!m) return f;
+    return `${parseInt(p[2], 10)}. ${m}. ${p[0]}`;
+  }
+
+  function waNum(tel) {
+    let d = String(tel || "").replace(/\D/g, "");
+    if (d.length === 8) d = "53" + d; // móvil cubano sin código país
+    return d;
+  }
+
+  async function cargarReservas() {
+    try {
+      let q = "/reservas?select=*,bloques(nombre,hora_inicio,hora_fin,precio)&order=creado_en.desc";
+      if (filtroReservas !== "todas") q += "&estado=eq." + filtroReservas;
+      const data = await sb("GET", q);
+      let adelantoPct = 50;
+      try {
+        const bi = await sb("GET", "/business_info?select=adelanto_pct&limit=1");
+        if (bi && bi[0] && bi[0].adelanto_pct != null) adelantoPct = bi[0].adelanto_pct;
+      } catch (e) {}
+      reservasCache = data || [];
+      document.getElementById("lista-reservas").innerHTML = reservasCache.map(r => {
+        const bq = r.bloques || {};
+        const bloque = bq.nombre || ("Bloque " + r.bloque_id);
+        const horario = (bq.hora_inicio && bq.hora_fin) ? `${bq.hora_inicio} – ${bq.hora_fin}` : "";
+        const precio = Number(bq.precio || 0);
+        const personas = Number(r.personas || 0);
+        const total = precio * personas;
+        const adelanto = Math.round(total * adelantoPct / 100);
+        const fechaF = fechaCorta(r.fecha);
+        const detalle = `${fechaF} · ${bloque}${horario ? " (" + horario + ")" : ""}`;
+        // Mensajes prearmados con toda la info (mismo formato de fecha que la app).
+        r._msgConf = encodeURIComponent(
+          `¡Hola ${r.nombre}! Tu misión en D'Angel Gelsoft fue CONFIRMADA 🎯\n` +
+          `📅 ${detalle}\n` +
+          `👥 ${personas} persona(s)\n` +
+          `💰 Total: ${total} CUP · Adelanto (${adelantoPct}%): ${adelanto} CUP\n` +
+          `¡Te esperamos!`
+        );
+        r._msgRech = encodeURIComponent(
+          `Hola ${r.nombre}, tu solicitud en D'Angel Gelsoft (${detalle}) no pudo ser confirmada. ` +
+          `Escríbenos para buscar otra fecha.`
+        );
+        return `
+        <div class="card"><div class="top">
+          <div><div class="title">${escapeHtml(r.nombre)} <span class="badge ${r.estado}">${r.estado}</span></div>
+          <div class="sub">📅 ${escapeHtml(fechaF)} · ${escapeHtml(bloque)}<br>
+          ${horario ? `🕐 ${escapeHtml(horario)}<br>` : ""}
+          👥 ${personas} persona(s) · 📞 ${escapeHtml(r.telefono)}<br>
+          💰 ${precio} CUP/persona · Total: ${total} CUP · Adelanto (${adelantoPct}%): ${adelanto} CUP</div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            ${r.estado === "pendiente" ? `
+              <button class="icon" style="color:#4ade80;border-color:#1d5c2e" onclick="decidirReserva(${r.id}, 'confirmada')">✔ Aceptar</button>
+              <button class="icon" style="color:#ff7b7b;border-color:#552222" onclick="decidirReserva(${r.id}, 'rechazada')">✖ Rechazar</button>` : ``}
+          </div></div>
+        </div></div>`;
+      }).join("")
+        || `<div class="empty">No hay reservas ${filtroReservas === "todas" ? "" : filtroReservas + "s"}.</div>`;
+    } catch (e) { aviso("No se pudieron cargar las reservas: " + e.message); }
+  }
+
+  // Aceptar/rechazar: actualiza el estado Y abre el WhatsApp del cliente
+  // con el mensaje prearmado (aprobación o rechazo).
+  async function decidirReserva(id, nuevoEstado) {
+    const r = reservasCache.find(x => x.id === id);
+    if (!r) { aviso("No se encontró la reserva."); return; }
+    try {
+      await sb("PATCH", "/reservas?id=eq." + id, { estado: nuevoEstado });
+      const msg = nuevoEstado === "confirmada" ? r._msgConf : r._msgRech;
+      window.open(`https://wa.me/${waNum(r.telefono)}?text=${msg}`, "_blank");
+      aviso(nuevoEstado === "confirmada"
+        ? "Misión confirmada ✓ — WhatsApp abierto para avisar"
+        : "Misión rechazada ✓ — WhatsApp abierto para avisar");
+      cargarReservas();
+    } catch (e) { aviso("Error: " + e.message); }
   }
 
   // ---------------- Ver el JSON que recibe la app ----------------
@@ -249,17 +947,26 @@
     const salida = document.getElementById("salida-json");
     salida.textContent = "Cargando…";
     try {
-      const res = await fetch(EDGE_FUNCTION_URL);
+      const res = await fetch(JSON_URL);
       const json = await res.json();
       salida.textContent = JSON.stringify(json, null, 2);
     } catch (e) {
-      salida.textContent = "No se pudo cargar el JSON. Revisa la URL de la función y que esté desplegada.\n" + e;
+      salida.textContent = "No se pudo cargar el JSON. Revisa que GitHub Pages esté activo.\n" + e;
     }
   }
 
   // Arranque.
-  cargarInfo();
-  cargarListas();
+  (async () => {
+    if (SIN_LLAVES) {
+      aviso("Falta configurar: edita este archivo y pon la URL y la anon key de Supabase.");
+      return;
+    }
+    try { await cargarInfo(); } catch (e) { aviso("No se pudo cargar la info: " + e.message); }
+    await cargarListas();
+    cargarGaleria();
+    cargarBloques();
+    cargarReservas();
+  })();
 </script>
 </body>
 </html>
