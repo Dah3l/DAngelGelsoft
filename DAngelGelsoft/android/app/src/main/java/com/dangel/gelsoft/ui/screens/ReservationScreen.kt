@@ -1,5 +1,9 @@
 package com.dangel.gelsoft.ui.screens
 import com.dangel.gelsoft.ui.components.SkeletonCard
+import com.dangel.gelsoft.ui.components.CutCornerShape
+import com.dangel.gelsoft.ui.components.DangelMono
+import com.dangel.gelsoft.ui.components.TacticalStepHeader
+import com.dangel.gelsoft.ui.components.hazardStripes
 import com.dangel.gelsoft.ui.theme.DangelType
 import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
@@ -205,7 +209,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
         Spacer(modifier = Modifier.height(16.dp))
 
         // ---------- Fecha ----------
-        Text("1. Elige el día", style = DangelType.CardTitle)
+        TacticalStepHeader(code = "PASO 01", title = "Elige el día")
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedButton(
             onClick = {
@@ -224,7 +228,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
 
         // ---------- Bloque ----------
         Spacer(modifier = Modifier.height(16.dp))
-        Text("2. Elige el bloque", style = DangelType.CardTitle)
+        TacticalStepHeader(code = "PASO 02", title = "Elige el bloque")
         Spacer(modifier = Modifier.height(8.dp))
         if (availableBlocks.isEmpty()) {
             Text(
@@ -247,15 +251,21 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
                     label = {
                         Text(
                             "${b.name}: ${b.startTime} – ${b.endTime} · ${formatCup(b.price)}/persona" +
-                                if (isTaken) " (ocupado)" else ""
+                                if (isTaken) "  [NO DISPONIBLE]" else "",
+                            fontFamily = DangelMono,
+                            fontWeight = FontWeight.Bold,
                         )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(if (isTaken) Modifier.hazardStripes() else Modifier),
+                    shape = CutCornerShape(4.dp),
                         .padding(bottom = 8.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = Color.Black,
+                        disabledContainerColor = Color.Transparent,
+                        disabledLabelColor = Color.White.copy(alpha = 0.9f),
                     ),
                 )
             }
@@ -263,12 +273,13 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
 
         // ---------- Datos ----------
         Spacer(modifier = Modifier.height(16.dp))
-        Text("3. Tus datos", style = DangelType.CardTitle)
+        TacticalStepHeader(code = "PASO 03", title = "Tus datos")
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = { Text("Nombre") },
+            label = { Text("NOMBRE", fontFamily = DangelMono, fontWeight = FontWeight.Bold) },
+            shape = CutCornerShape(4.dp),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -276,17 +287,29 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
         OutlinedTextField(
             value = telefono,
             onValueChange = { telefono = it },
-            label = { Text("Teléfono / WhatsApp") },
+            label = { Text("TELÉFONO / WHATSAPP", fontFamily = DangelMono, fontWeight = FontWeight.Bold) },
+            shape = CutCornerShape(4.dp),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Personas: ", style = DangelType.Body)
-            OutlinedButton(onClick = { if (personas > 1) personas-- }) { Text("−") }
-            Text(" $personas ", style = DangelType.CardTitle)
-            OutlinedButton(onClick = { if (personas < 50) personas++ }) { Text("+") }
+            Text("ESCUADRÓN:", fontFamily = DangelMono, fontWeight = FontWeight.Bold, style = DangelType.Body)
+            OutlinedButton(
+                onClick = { if (personas > 1) personas-- },
+                shape = CutCornerShape(4.dp),
+            ) { Text("−", fontFamily = DangelMono, fontWeight = FontWeight.Bold) }
+            Text(
+                " $personas OPERADORES ",
+                fontFamily = DangelMono,
+                fontWeight = FontWeight.Bold,
+                style = DangelType.CardTitle,
+            )
+            OutlinedButton(
+                onClick = { if (personas < 50) personas++ },
+                shape = CutCornerShape(4.dp),
+            ) { Text("+", fontFamily = DangelMono, fontWeight = FontWeight.Bold) }
         }
 
         // ---------- Precio ----------
@@ -295,10 +318,11 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             val total = b.price * personas
             val adelanto = total * adelantoPct / 100.0
             Spacer(modifier = Modifier.height(16.dp))
-            Text("4. Precio", style = DangelType.CardTitle)
+            TacticalStepHeader(code = "PASO 04", title = "Precio")
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                shape = CutCornerShape(6.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -401,6 +425,7 @@ private fun PriceRow(
         )
         Text(
             value,
+            fontFamily = DangelMono,
             style = DangelType.Body,
             fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
             color = if (highlight) MaterialTheme.colorScheme.primary
