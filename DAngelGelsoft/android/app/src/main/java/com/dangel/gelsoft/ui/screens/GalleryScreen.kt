@@ -1,8 +1,10 @@
 package com.dangel.gelsoft.ui.screens
+import com.dangel.gelsoft.ui.components.shimmer
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -108,21 +110,27 @@ fun GalleryScreen(config: AppConfig) {
             modifier = Modifier.fillMaxSize(),
         ) {
             items(photos, key = { it.id }) { photo ->
-                AsyncImage(
-                    model = photo.url,
-                    contentDescription = "Foto de la galería",
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable {
+                        .shimmer(),
+                ) {
+                    AsyncImage(
+                        model = photo.url,
+                        contentDescription = "Foto de la galería",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable {
                             viewer = ViewerState(
                                 photos = photos,
                                 startIndex = photos.indexOf(photo).coerceAtLeast(0),
                             )
                         },
                     contentScale = ContentScale.Crop,
-                )
+                    )
+                }
             }
         }
     }
