@@ -1,6 +1,6 @@
 package com.dangel.gelsoft.ui
+import com.dangel.gelsoft.R
 import com.dangel.gelsoft.ui.components.CrosshairIcon
-import com.dangel.gelsoft.ui.components.HelmetIcon
 import com.dangel.gelsoft.ui.theme.DangelType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -59,8 +60,14 @@ fun DangelBottomBar(
         BottomTab("En acción", 2) { c, m ->
             Icon(Icons.Filled.PhotoLibrary, null, tint = c, modifier = m)
         },
-        // TODO: swap for painterResource(R.drawable.ic_helmet) once the client PNG is uploaded.
-        BottomTab("Soldado", 3) { c, m -> HelmetIcon(color = c, modifier = m) },
+        BottomTab("Soldado", 3) { c, m ->
+            Icon(
+                painter = painterResource(id = R.drawable.ic_helmet),
+                contentDescription = null,
+                tint = c,
+                modifier = m,
+            )
+        },
     )
 
     Box(
