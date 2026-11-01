@@ -975,7 +975,7 @@ function cambiarToken() {
         hoy.getFullYear() + "-" + String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
         String(hoy.getDate()).padStart(2, "0");
       try {
-        bloquesCache = await sb("GET", "/bloques?select=id,nombre,hora_inicio,hora_fin,precio&order=nombre");
+        bloquesCache = await sb("GET", "/bloques?select=id,nombre,hora_inicio,hora_fin,precio,dias&order=nombre");
       } catch (e) { aviso("No se pudieron cargar los bloques: " + e.message); bloquesCache = []; }
       await actualizarDisponibilidadBloques();
     }
@@ -986,6 +986,8 @@ function cambiarToken() {
   async function actualizarDisponibilidadBloques() {
     const fecha = document.getElementById("nr-fecha").value;
     if (!fecha) return;
+    // 1=Lun … 7=Dom (igual que la app).
+    const diaNum = (() => { const d = new Date(fecha + "T12:00:00").getDay(); return d === 0 ? 7 : d; })();
     const ocupados = new Set();
     try {
       const rs = await sb("GET", `/reservas?select=bloque_id&fecha=eq.${fecha}&estado=neq.rechazada`);
@@ -993,9 +995,14 @@ function cambiarToken() {
     } catch (e) {}
     const sel = document.getElementById("nr-bloque");
     sel.innerHTML = (bloquesCache || []).map(b => {
+      const dias = String(b.dias || "1,2,3,4,5,6,7").split(",").map(s => s.trim());
+      const operaEseDia = dias.includes(String(diaNum));
       const tomado = ocupados.has(String(b.id));
-      const etiqueta = `${b.nombre}${b.hora_inicio ? ` (${b.hora_inicio}–${b.hora_fin})` : ""}${tomado ? " — OCUPADO" : ""}`;
-      return `<option value="${b.id}"${tomado ? " disabled" : ""}>${escapeHtml(etiqueta)}</option>`;
+      let etiqueta = `${b.nombre}${b.hora_inicio ? ` (${b.hora_inicio}–${b.hora_fin})` : ""}`;
+      let disabled = false;
+      if (!operaEseDia) { etiqueta += " — NO ESE DÍA"; disabled = true; }
+      else if (tomado) { etiqueta += " — OCUPADO"; disabled = true; }
+      return `<option value="${b.id}"${disabled ? " disabled" : ""}>${escapeHtml(etiqueta)}</option>`;
     }).join("");
     if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) {
       const libre = [...sel.options].find(o => !o.disabled);
