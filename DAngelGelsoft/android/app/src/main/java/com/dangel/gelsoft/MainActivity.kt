@@ -296,49 +296,43 @@ private fun DangelScaffold(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 96.dp),
+            Column(
+                modifier = Modifier.fillMaxSize(),
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-            if (offline) {
-                Text(
-                    text = "Sin conexión: mostrando datos guardados",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = DangelType.Tiny,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 8.dp),
-                )
-            }
-            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
-                when (overlay.value) {
-                    "reservar" -> ReservationScreen(
-                        config = current,
-                        onDone = { overlay.value = null },
-                        onMyReservations = { overlay.value = "mis_reservas" },
+                if (offline) {
+                    Text(
+                        text = "Sin conexión: mostrando datos guardados",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = DangelType.Tiny,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(top = 8.dp),
                     )
-                    "avisos" -> AnnouncementsScreen(current)
-                    "mis_reservas" -> MyReservationsScreen(current)
-                    else -> when (tab.value) {
-                        0 -> HomeScreen(
+                }
+                Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+                    when (overlay.value) {
+                        "reservar" -> ReservationScreen(
                             config = current,
-                            onReserve = goReserve,
-                            onSeeGallery = { tab.value = 2 },
-                        )
-                        1 -> PricesScreen(current)
-                        2 -> GalleryScreen(current)
-                        else -> ProfileScreen(
+                            onDone = { overlay.value = null },
                             onMyReservations = { overlay.value = "mis_reservas" },
-                            onRequestNotifPermission = onRequestNotifPermission,
                         )
+                        "avisos" -> AnnouncementsScreen(current)
+                        "mis_reservas" -> MyReservationsScreen(current)
+                        else -> when (tab.value) {
+                            0 -> HomeScreen(
+                                config = current,
+                                onReserve = goReserve,
+                                onSeeGallery = { tab.value = 2 },
+                            )
+                            1 -> PricesScreen(current)
+                            2 -> GalleryScreen(current)
+                            else -> ProfileScreen(
+                                onMyReservations = { overlay.value = "mis_reservas" },
+                                onRequestNotifPermission = onRequestNotifPermission,
+                            )
+                        }
                     }
-                }
-                }
-            }
+                    }
             DangelBottomBar(
                 selectedTab = tab.value,
                 onTabSelected = {
