@@ -141,7 +141,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             Text("✔", fontSize = 48.sp, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "¡Solicitud registrada!",
+                "¡Misión registrada!",
                 style = DangelType.Title,
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -158,7 +158,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Se abrió WhatsApp con el mensaje listo: solo toca enviar para avisar al administrador.",
+                "Se abrió WhatsApp con el mensaje listo: solo toca enviar para avisar al campo.",
                 style = DangelType.Body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -190,7 +190,7 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
         Text("Reservar", style = DangelType.Title)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "Elige el día y el bloque. La reserva queda pendiente hasta que el administrador la confirme.",
+            "Elige el día y el bloque. Tu misión queda en espera de órdenes hasta que el campo la confirme.",
             style = DangelType.Body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
