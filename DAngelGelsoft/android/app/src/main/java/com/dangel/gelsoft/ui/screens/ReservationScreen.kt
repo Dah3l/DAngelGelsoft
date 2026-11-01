@@ -103,12 +103,19 @@ fun ReservationScreen(config: AppConfig, onDone: () -> Unit, onMyReservations: (
         val b = bloque!!
         val total = b.price * personas
         val adelanto = total * adelantoPct / 100.0
-        val waMsg = "¡Hola! Soy $nombre, acabo de solicitar una reserva en D'Angel Gelsoft:\n" +
-            "$fechaStr · Bloque ${b.name} (${b.startTime} – ${b.endTime})\n" +
-            "$personas persona(s) × ${formatCup(b.price)} = ${formatCup(total)}\n" +
-            "Adelanto ($adelantoPct%): ${formatCup(adelanto)}\n" +
-            "Mi teléfono: $telefono\n" +
-            "Revísala aquí: ${SupabaseDirect.PANEL_RESERVAS_URL}"
+        val waMsg = "🎯 *NUEVA MISIÓN* — D'Angel Gelsoft\n" +
+            "───────────────────\n" +
+            "👤 *Soldado:* $nombre\n" +
+            "📅 *Fecha:* $fechaStr\n" +
+            "⏰ *Bloque:* ${b.name}\n" +
+            "🕐 *Horario:* ${b.startTime} – ${b.endTime}\n" +
+            "👥 *Personas:* $personas\n" +
+            "💵 *Precio por persona:* ${formatCup(b.price)}\n" +
+            "💰 *Total:* ${formatCup(total)}\n" +
+            "💸 *Adelanto ($adelantoPct%):* ${formatCup(adelanto)}\n" +
+            "📱 *Teléfono:* $telefono\n" +
+            "───────────────────\n" +
+            "Revisar y confirmar: ${SupabaseDirect.PANEL_RESERVAS_URL}"
         LaunchedEffect(result) {
             waFailed = false
             // Save on-device: "Mis reservas" reads local first.
