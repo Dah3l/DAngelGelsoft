@@ -235,7 +235,7 @@
         <div><label>Personas</label><input id="nr-personas" type="number" min="1" value="1"></div>
       </div>
       <div class="row">
-        <div><label>Fecha</label><input id="nr-fecha" type="date"></div>
+        <div><label>Fecha</label><input id="nr-fecha" type="date" onchange="actualizarDisponibilidadBloques()"></div>
         <div><label>Bloque</label><select id="nr-bloque"></select></div>
       </div>
       <div style="display:flex;gap:8px">
@@ -976,10 +976,30 @@ function cambiarToken() {
         String(hoy.getDate()).padStart(2, "0");
       try {
         bloquesCache = await sb("GET", "/bloques?select=id,nombre,hora_inicio,hora_fin,precio&order=nombre");
-        document.getElementById("nr-bloque").innerHTML = (bloquesCache || []).map(b =>
-          `<option value="${b.id}">${escapeHtml(b.nombre)}${b.hora_inicio ? ` (${b.hora_inicio}–${b.hora_fin})` : ""}</option>`
-        ).join("");
-      } catch (e) { aviso("No se pudieron cargar los bloques: " + e.message); }
+      } catch (e) { aviso("No se pudieron cargar los bloques: " + e.message); bloquesCache = []; }
+      await actualizarDisponibilidadBloques();
+    }
+  }
+
+  // Marca como OCUPADO (deshabilitado) los bloques ya reservados en la fecha elegida,
+  // incluyendo reservas hechas desde la app.
+  async function actualizarDisponibilidadBloques() {
+    const fecha = document.getElementById("nr-fecha").value;
+    if (!fecha) return;
+    const ocupados = new Set();
+    try {
+      const rs = await sb("GET", `/reservas?select=bloque_id&fecha=eq.${fecha}&estado=neq.rechazada`);
+      (rs || []).forEach(r => ocupados.add(String(r.bloque_id)));
+    } catch (e) {}
+    const sel = document.getElementById("nr-bloque");
+    sel.innerHTML = (bloquesCache || []).map(b => {
+      const tomado = ocupados.has(String(b.id));
+      const etiqueta = `${b.nombre}${b.hora_inicio ? ` (${b.hora_inicio}–${b.hora_fin})` : ""}${tomado ? " — OCUPADO" : ""}`;
+      return `<option value="${b.id}"${tomado ? " disabled" : ""}>${escapeHtml(etiqueta)}</option>`;
+    }).join("");
+    if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) {
+      const libre = [...sel.options].find(o => !o.disabled);
+      if (libre) sel.value = libre.value;
     }
   }
 
